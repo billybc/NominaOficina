@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Asignación de Turnos y Tareas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    h1, h2 { color: #2d71a1; }
+    h3 { color: #1a456b; margin-bottom: 15px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+    th, td { border: 1px solid #ccc; text-align: center; padding: 6px 4px; }
+    th { background: #2d71a1; color: white; }
+    .form-section { background: #f7fafc; padding: 18px; margin-bottom: 32px; border-radius: 7px; box-shadow: 0 1px 4px #ccc5; }
+    .btn { background: #2d71a1; color: white; border: none; padding: 6px 15px; border-radius: 3px; cursor: pointer; margin: 2px;}
+    .btn:hover { background: #1a456b; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-secondary { background: #666; }
+    .btn-secondary:hover { background: #555; }
+    .small { font-size: 0.91em; color: #666; }
+    .edit-form { background: #fff8e1; border-left: 4px solid #ffc107; }
+    .text-success { color: #28a745; font-weight: bold; }
+    .text-danger { color: #dc3545; font-weight: bold; }
+    
+    /* Estilos para el login */
+    .login-overlay { 
+      position: fixed; 
+      top: 0; left: 0; 
+      width: 100%; height: 100%; 
+      background: rgba(45, 113, 161, 0.95); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 1000;
+    }
+    .login-card { 
+      background: white; 
+      padding: 40px; 
+      border-radius: 10px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+      text-align: center; 
+      max-width: 400px; 
+      width: 90%;
+    }
+    .login-card h2 { 
+      color: #2d71a1; 
+      margin-bottom: 20px; 
+    }
+    .login-input { 
+      width: 100%; 
+      padding: 12px; 
+      border: 2px solid #ddd; 
+      border-radius: 5px; 
+      font-size: 16px; 
+      margin-bottom: 20px; 
+      box-sizing: border-box;
+    }
+    .login-input:focus { 
+      border-color: #2d71a1; 
+      outline: none; 
+    }
+    .user-info { 
+      background: #e8f4f8; 
+      padding: 10px; 
+      border-radius: 5px; 
+      margin-bottom: 20px; 
+      border-left: 4px solid #2d71a1;
+    }
+    .audit-section { 
+      background: #f9f9f9; 
+      padding: 15px; 
+      border-radius: 5px; 
+      margin-bottom: 20px; 
+      border: 1px solid #ddd;
+    }
+    .audit-entry { 
+      padding: 8px; 
+      border-bottom: 1px solid #eee; 
+      font-size: 0.9em;
+    }
+    .audit-entry:last-child { 
+      border-bottom: none; 
+    }
+    .audit-timestamp { 
+      color: #666; 
+      font-size: 0.8em; 
+    }
+    
+    @media (max-width: 700px) {
+      table, thead, tbody, th, td, tr { display: block; }
+      td, th { min-width: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Pantalla de login -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <h2>🔐 Acceso al Sistema</h2>
+      <p>Por favor, ingresa tu nombre para acceder al sistema de asignación de turnos.</p>
+      <form id="loginForm">
+        <input 
+          type="text" 
+          id="userName" 
+          class="login-input" 
+          placeholder="Ingresa tu nombre completo" 
+          required 
+          autocomplete="name"
+        >
+        <br>
+        <button class="btn" type="submit" style="padding: 12px 30px; font-size: 16px;">
+          ✅ Ingresar al sistema
+        </button>
+      </form>
+      <p class="small" style="margin-top: 15px; color: #666;">
+        Tu nombre será registrado para auditoría de cambios.
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenido principal (oculto inicialmente) -->
+  <div id="mainContent" style="display: none;">
+    <!-- Información del usuario actual -->
+    <div class="user-info">
+      <strong>👤 Usuario actual:</strong> <span id="currentUser"></span>
+      <button class="btn btn-secondary" onclick="cambiarUsuario()" style="float: right; font-size: 0.8em; padding: 4px 10px;">
+        🔄 Cambiar usuario
+      </button>
+      <div style="clear: both;"></div>
+    </div>
+
+  <h1>Asignación de Turnos y Tareas (Jueves a Jueves)</h1>
+  <div class="form-section">
+    <h2>Registrar pareja y turnos</h2>
+    <form id="registerForm">
+      <label>Pareja 1 (Nombre): <input required name="nombre1" /></label>
+      <label>Pareja 2 (Nombre): <input required name="nombre2" /></label>
+      <br><br>
+      <b>Elegir turno(s) para cada día:</b>
+      <table>
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>08:00-16:00</th>
+            <th>16:00-00:00</th>
+          </tr>
+        </thead>
+        <tbody id="diasTurnos">
+          <!-- se llena con JS -->
+        </tbody>
+      </table>
+      <span class="small">Puedes elegir uno o dos turnos por día.</span><br><br>
+      <button class="btn" type="submit">Registrar pareja y turnos</button>
+      <button class="btn btn-secondary" type="button" onclick="cargarDatosEjemplo()" style="margin-left: 10px;">📝 Cargar datos de ejemplo</button>
+    </form>
+  </div>
+
+  <h2>Parejas registradas</h2>
+  <div id="listaParejasRegistradas"></div>
+
+  <div id="editarParejaForm" style="display:none;" class="form-section edit-form">
+    <h3>Editar pareja</h3>
+    <form id="updateForm">
+      <input type="hidden" id="editIndex" />
+      <label>Pareja 1 (Nombre): <input required id="editNombre1" /></label>
+      <label>Pareja 2 (Nombre): <input required id="editNombre2" /></label>
+      <br><br>
+      <b>Elegir turno(s) para cada día:</b>
+      <table>
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>08:00-16:00</th>
+            <th>16:00-00:00</th>
+          </tr>
+        </thead>
+        <tbody id="editDiasTurnos">
+          <!-- se llena con JS -->
+        </tbody>
+      </table>
+      <span class="small">Puedes elegir uno o dos turnos por día.</span><br><br>
+      <button class="btn btn-success" type="submit">Actualizar pareja</button>
+      <button class="btn btn-secondary" type="button" onclick="cancelarEdicion()">Cancelar</button>
+    </form>
+  </div>
+
+  <h2>Tabla de asignaciones</h2>
+  <div class="form-section">
+    <p><strong>Sistema de distribución automática:</strong> Los turnos se asignan automáticamente rotando entre todas las parejas registradas, respetando los turnos que cada pareja seleccionó como disponibles.</p>
+    <button class="btn btn-success" onclick="redistribuirTurnos()">🔄 Redistribuir turnos automáticamente</button>
+    <button class="btn" onclick="generarPatronOrganizado()" style="background:#17a2b8; margin-left:10px;">📅 Patrón consecutivo</button>
+    <button class="btn btn-secondary" onclick="restaurarAlgoritmoOriginal()" style="margin-left:5px;">🔙 Algoritmo original</button>
+    <br><span class="small">Redistribuir: aleatorio | Consecutivo: 1 turno por pareja alternando | Original: distribución equitativa</span>
+  </div>
+  
+  <div id="estadisticasDistribucion"></div>
+  
+  <div id="tablaAsignaciones"></div>
+  <button class="btn" onclick="descargarCSV()">Descargar tabla (CSV)</button>
+  <button class="btn" onclick="window.print()">Imprimir tabla</button>
+  <br><span class="small">Cualquiera con este link puede ver y descargar la tabla.</span>
+
+  <!-- Sección de auditoría -->
+  <div class="audit-section">
+    <h3>📋 Registro de cambios</h3>
+    <div id="auditLog">
+      <p class="small">No hay cambios registrados aún.</p>
+    </div>
+    <button class="btn btn-secondary" onclick="limpiarAuditoria()" style="font-size: 0.8em; margin-top: 10px;">
+      � Limpiar registro (Admin)
+    </button>
+  </div>
+
+  <!-- Sección de notas guardadas -->
+  <div class="form-section">
+    <h3>📄 Notas guardadas</h3>
+    <div id="notasGuardadas" style="min-height: 80px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; white-space: pre-wrap;">
+      <p class="small" style="color: #666; font-style: italic;">No hay notas guardadas aún.</p>
+    </div>
+    <div style="text-align: right; margin-bottom: 10px;">
+      <span class="small" id="ultimaModificacion" style="color: #666;"></span>
+    </div>
+  </div>
+
+  <!-- Sección de notas -->
+  <div class="form-section">
+    <h3>📝 Escribir notas y observaciones</h3>
+    <textarea 
+      id="notasTextarea" 
+      placeholder="Escribe aquí notas, observaciones o comentarios sobre los turnos y asignaciones..."
+      style="width: 100%; min-height: 120px; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-family: Arial, sans-serif; resize: vertical; box-sizing: border-box;"
+    ></textarea>
+    <br>
+    <button class="btn btn-success" onclick="guardarNotas()" style="margin-top: 10px; margin-right: 5px;">
+      💾 Guardar notas
+    </button>
+    <button class="btn btn-secondary" onclick="limpiarNotasGuardadas()" style="margin-top: 10px; margin-right: 5px;">
+      🗑️ Limpiar notas guardadas
+    </button>
+    <button class="btn" onclick="limpiarTextarea()" style="margin-top: 10px; background: #6c757d;">
+      📄 Limpiar editor
+    </button>
+    <br>
+    <span class="small" style="margin-top: 5px; display: block;">
+      Las notas se guardan en el campo de arriba y quedan registradas en la auditoría.
+    </span>
+  </div>
+
+  <script>
+    // === SISTEMA DE USUARIO Y AUDITORÍA ===
+    
+    let currentUser = null;
+    
+    // Inicialización del sistema
+    document.addEventListener('DOMContentLoaded', function() {
+      // Verificar si hay usuario guardado
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        currentUser = savedUser;
+        mostrarContenidoPrincipal();
+      } else {
+        mostrarPantallaLogin();
+      }
+    });
+    
+    // Manejar el login
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const userName = document.getElementById('userName').value.trim();
+      
+      if (userName.length < 2) {
+        alert('Por favor, ingresa un nombre válido (mínimo 2 caracteres).');
+        return;
+      }
+      
+      currentUser = userName;
+      localStorage.setItem('currentUser', userName);
+      
+      // Registrar el login
+      registrarCambio('Login', `${userName} ingresó al sistema`);
+      
+      mostrarContenidoPrincipal();
+    });
+    
+    // Mostrar contenido principal
+    function mostrarContenidoPrincipal() {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('currentUser').textContent = currentUser;
+      
+      // Inicializar la aplicación
+      renderFormDias();
+      renderTabla();
+      renderListaParejas();
+      mostrarAuditoria();
+      cargarNotas();
+      mostrarNotasGuardadas();
+    }
+    
+    // Mostrar pantalla de login
+    function mostrarPantallaLogin() {
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('userName').focus();
+    }
+    
+    // Cambiar usuario
+    function cambiarUsuario() {
+      if (confirm('¿Estás seguro de que quieres cambiar de usuario? Se cerrará la sesión actual.')) {
+        registrarCambio('Logout', `${currentUser} cerró sesión`);
+        localStorage.removeItem('currentUser');
+        currentUser = null;
+        document.getElementById('userName').value = '';
+        mostrarPantallaLogin();
+      }
+    }
+    
+    // === SISTEMA DE AUDITORÍA ===
+    
+    // Registrar cambios
+    function registrarCambio(accion, descripcion) {
+      const auditoria = cargarAuditoria();
+      const cambio = {
+        timestamp: new Date().toISOString(),
+        usuario: currentUser,
+        accion: accion,
+        descripcion: descripcion
+      };
+      
+      auditoria.unshift(cambio); // Agregar al principio
+      
+      // Mantener solo los últimos 50 cambios
+      if (auditoria.length > 50) {
+        auditoria.splice(50);
+      }
+      
+      localStorage.setItem('auditoria', JSON.stringify(auditoria));
+      mostrarAuditoria();
+    }
+    
+    // Cargar auditoría
+    function cargarAuditoria() {
+      try {
+        return JSON.parse(localStorage.getItem('auditoria')) || [];
+      } catch {
+        return [];
+      }
+    }
+    
+    // Mostrar auditoría
+    function mostrarAuditoria() {
+      const auditoria = cargarAuditoria();
+      const container = document.getElementById('auditLog');
+      
+      if (auditoria.length === 0) {
+        container.innerHTML = '<p class="small">No hay cambios registrados aún.</p>';
+        return;
+      }
+      
+      let html = '';
+      auditoria.slice(0, 10).forEach(cambio => { // Mostrar solo los últimos 10
+        const fecha = new Date(cambio.timestamp);
+        const fechaFormateada = fecha.toLocaleString('es-ES');
+        
+        html += `<div class="audit-entry">
+          <strong>${cambio.accion}:</strong> ${cambio.descripcion}
+          <br><span class="audit-timestamp">👤 ${cambio.usuario} - ⏰ ${fechaFormateada}</span>
+        </div>`;
+      });
+      
+      if (auditoria.length > 10) {
+        html += `<p class="small" style="text-align: center; margin-top: 10px;">
+          ... y ${auditoria.length - 10} cambios más antiguos
+        </p>`;
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // Limpiar auditoría con contraseña
+    function limpiarAuditoria() {
+      const clave = prompt('🔒 Esta acción requiere autorización.\nIngresa la clave de administrador para limpiar el registro:');
+      
+      if (clave === null) {
+        // Usuario canceló
+        return;
+      }
+      
+      if (clave !== 'Jessica') {
+        alert('❌ Clave incorrecta. Solo el administrador puede limpiar el registro de cambios.');
+        registrarCambio('Acceso Denegado', `Intento fallido de limpiar auditoría con clave: "${clave}"`);
+        return;
+      }
+      
+      // Clave correcta
+      if (confirm('✅ Clave correcta.\n¿Estás seguro de que quieres limpiar el registro de cambios?\n\nEsta acción no se puede deshacer y eliminará todo el historial.')) {
+        localStorage.removeItem('auditoria');
+        registrarCambio('Sistema', `Registro de auditoría limpiado por administrador`);
+        mostrarAuditoria();
+        alert('🗑️ Registro de cambios limpiado exitosamente.');
+      }
+    }
+
+    // === SISTEMA DE NOTAS ===
+    
+    // Cargar notas al inicializar (solo el textarea)
+    function cargarNotas() {
+      const notas = localStorage.getItem('notasEditor') || '';
+      document.getElementById('notasTextarea').value = notas;
+    }
+    
+    // Mostrar notas guardadas
+    function mostrarNotasGuardadas() {
+      const notasGuardadas = localStorage.getItem('notasGuardadas') || '';
+      const ultimaModificacion = localStorage.getItem('ultimaModificacionNotas');
+      const container = document.getElementById('notasGuardadas');
+      const timestampElement = document.getElementById('ultimaModificacion');
+      
+      if (notasGuardadas.trim()) {
+        container.innerHTML = notasGuardadas;
+        
+        if (ultimaModificacion) {
+          const fecha = new Date(ultimaModificacion);
+          timestampElement.textContent = `Última modificación: ${fecha.toLocaleString('es-ES')}`;
+        }
+      } else {
+        container.innerHTML = '<p class="small" style="color: #666; font-style: italic;">No hay notas guardadas aún.</p>';
+        timestampElement.textContent = '';
+      }
+    }
+    
+    // Guardar notas
+    function guardarNotas() {
+      const notasEditor = document.getElementById('notasTextarea').value;
+      
+      if (!notasEditor.trim()) {
+        alert('⚠️ El editor está vacío. Escribe algo antes de guardar.');
+        return;
+      }
+      
+      // Guardar las notas del editor en las notas guardadas
+      localStorage.setItem('notasGuardadas', notasEditor);
+      localStorage.setItem('ultimaModificacionNotas', new Date().toISOString());
+      
+      // Limpiar el editor después de guardar
+      document.getElementById('notasTextarea').value = '';
+      localStorage.removeItem('notasEditor');
+      
+      // Actualizar la vista
+      mostrarNotasGuardadas();
+      
+      // Registrar la acción
+      const preview = notasEditor.length > 50 ? notasEditor.substring(0, 50) + '...' : notasEditor;
+      registrarCambio('Notas Guardadas', `Se guardaron notas: "${preview}"`);
+      
+      alert('📝 Notas guardadas exitosamente y editor limpiado.');
+    }
+    
+    // Limpiar notas guardadas
+    function limpiarNotasGuardadas() {
+      if (confirm('¿Estás seguro de que quieres limpiar las notas guardadas?\n\nEsta acción no se puede deshacer.')) {
+        localStorage.removeItem('notasGuardadas');
+        localStorage.removeItem('ultimaModificacionNotas');
+        
+        // Actualizar la vista
+        mostrarNotasGuardadas();
+        
+        // Registrar la acción
+        registrarCambio('Notas Eliminadas', 'Se eliminaron las notas guardadas');
+        
+        alert('�️ Notas guardadas eliminadas exitosamente.');
+      }
+    }
+    
+    // Limpiar solo el editor de texto
+    function limpiarTextarea() {
+      if (confirm('¿Limpiar el contenido del editor?\n\nEsto solo limpiará lo que estás escribiendo, no las notas guardadas.')) {
+        document.getElementById('notasTextarea').value = '';
+        localStorage.removeItem('notasEditor');
+        alert('📄 Editor limpiado.');
+      }
+    }
+    
+    // Guardar automáticamente el contenido del editor mientras se escribe
+    document.addEventListener('DOMContentLoaded', function() {
+      const textarea = document.getElementById('notasTextarea');
+      if (textarea) {
+        textarea.addEventListener('input', function() {
+          localStorage.setItem('notasEditor', this.value);
+        });
+      }
+    });
+
+    // === APLICACIÓN PRINCIPAL ===
+    
+    // Días de jueves a jueves
+    const DIAS = ["Jueves", "Viernes", "Sábado", "Domingo", "Lunes", "Martes", "Miércoles", "Jueves"];
+    const TURNOS = [
+      { hora: "08:00-16:00", id: "t1" },
+      { hora: "16:00-00:00", id: "t2" }
+    ];
+    const TAREAS = [
+      "Traer alimentos",
+      "Lavar trastes (10:00 am)",
+      "Lavar trastes (14:00 pm)",
+      "Lavar trastes (19:00 pm)",
+      "Tirar basura (12:00 pm)",
+      
+    ];
+
+    // --- Renderizar formulario de turnos ---
+    function renderFormDias() {
+      const tb = document.getElementById('diasTurnos');
+      tb.innerHTML = "";
+      for (let i = 0; i < DIAS.length; i++) {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${DIAS[i]}</td>` + TURNOS.map((t, j) =>
+          `<td><input type="checkbox" name="dia${i}" value="${t.id}"></td>`
+        ).join('');
+        tb.appendChild(tr);
+      }
+    }
+
+    // --- Renderizar formulario de turnos para edición ---
+    function renderEditFormDias() {
+      const tb = document.getElementById('editDiasTurnos');
+      tb.innerHTML = "";
+      for (let i = 0; i < DIAS.length; i++) {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${DIAS[i]}</td>` + TURNOS.map((t, j) =>
+          `<td><input type="checkbox" name="editDia${i}" value="${t.id}"></td>`
+        ).join('');
+        tb.appendChild(tr);
+      }
+    }
+
+    renderFormDias();
+
+    // Guardar y cargar datos con localStorage
+    function guardarParejas(parejas) {
+      localStorage.setItem('parejas', JSON.stringify(parejas));
+    }
+    function cargarParejas() {
+      try {
+        return JSON.parse(localStorage.getItem('parejas')) || [];
+      } catch { return []; }
+    }
+
+    // Registrar pareja y turnos
+    document.getElementById('registerForm').onsubmit = function(e) {
+      e.preventDefault();
+      const f = e.target;
+      const nombre1 = f.nombre1.value.trim();
+      const nombre2 = f.nombre2.value.trim();
+      if (!nombre1 || !nombre2) { alert('Escribe ambos nombres'); return; }
+      let turnosPorDia = [];
+      for (let i = 0; i < DIAS.length; i++) {
+        let checks = [...f.querySelectorAll(`input[name="dia${i}"]:checked`)].map(x => x.value);
+        if (checks.length === 0) { alert(`Selecciona al menos un turno para el día ${DIAS[i]}`); return; }
+        turnosPorDia.push(checks);
+      }
+      let parejas = cargarParejas();
+      parejas.push({ nombre1, nombre2, turnosPorDia });
+      guardarParejas(parejas);
+      
+      // Registrar la acción
+      registrarCambio('Pareja Agregada', `Se registró la pareja "${nombre1} & ${nombre2}"`);
+      
+      f.reset();
+      renderFormDias();
+      renderTabla();
+      renderListaParejas();
+      alert('¡Pareja registrada!');
+    };
+
+    // Mostrar lista de parejas registradas
+    function renderListaParejas() {
+      const parejas = cargarParejas();
+      const container = document.getElementById('listaParejasRegistradas');
+      
+      if (parejas.length === 0) {
+        container.innerHTML = "<p>No hay parejas registradas aún.</p>";
+        return;
+      }
+
+      let html = `<table><thead><tr>
+        <th>Pareja</th>
+        <th>Turnos asignados</th>
+        <th>Acciones</th>
+      </tr></thead><tbody>`;
+
+      parejas.forEach((pareja, index) => {
+        let turnosTexto = [];
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          let turnosDelDia = pareja.turnosPorDia[dia].map(tId => 
+            TURNOS.find(t => t.id === tId)?.hora
+          ).filter(Boolean);
+          if (turnosDelDia.length > 0) {
+            turnosTexto.push(`${DIAS[dia]}: ${turnosDelDia.join(', ')}`);
+          }
+        }
+
+        html += `<tr>
+          <td><strong>${pareja.nombre1} & ${pareja.nombre2}</strong></td>
+          <td class="small">${turnosTexto.join('<br>')}</td>
+          <td>
+            <button class="btn btn-success" onclick="editarPareja(${index})" style="font-size:0.8em; padding:4px 8px;">Editar</button>
+            <button class="btn btn-danger" onclick="eliminarPareja(${index})" style="font-size:0.8em; padding:4px 8px;">Eliminar</button>
+          </td>
+        </tr>`;
+      });
+
+      html += "</tbody></table>";
+      container.innerHTML = html;
+    }
+
+    // Función para editar pareja
+    function editarPareja(index) {
+      const parejas = cargarParejas();
+      const pareja = parejas[index];
+      
+      // Llenar el formulario de edición
+      document.getElementById('editIndex').value = index;
+      document.getElementById('editNombre1').value = pareja.nombre1;
+      document.getElementById('editNombre2').value = pareja.nombre2;
+      
+      // Renderizar formulario de turnos para edición
+      renderEditFormDias();
+      
+      // Marcar los turnos actuales
+      for (let dia = 0; dia < DIAS.length; dia++) {
+        pareja.turnosPorDia[dia].forEach(turnoId => {
+          const checkbox = document.querySelector(`input[name="editDia${dia}"][value="${turnoId}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
+      
+      // Mostrar el formulario de edición
+      document.getElementById('editarParejaForm').style.display = 'block';
+      document.getElementById('editNombre1').focus();
+    }
+
+    // Función para cancelar edición
+    function cancelarEdicion() {
+      document.getElementById('editarParejaForm').style.display = 'none';
+      document.getElementById('updateForm').reset();
+    }
+
+    // Función para eliminar pareja
+    function eliminarPareja(index) {
+      const parejas = cargarParejas();
+      const pareja = parejas[index];
+      
+      if (confirm(`¿Estás seguro de eliminar la pareja "${pareja.nombre1} & ${pareja.nombre2}"?`)) {
+        parejas.splice(index, 1);
+        guardarParejas(parejas);
+        
+        // Registrar la acción
+        registrarCambio('Pareja Eliminada', `Se eliminó la pareja "${pareja.nombre1} & ${pareja.nombre2}"`);
+        
+        renderListaParejas();
+        renderTabla();
+        alert('Pareja eliminada exitosamente.');
+      }
+    }
+
+    // Manejar actualización de pareja
+    document.getElementById('updateForm').onsubmit = function(e) {
+      e.preventDefault();
+      const f = e.target;
+      const index = parseInt(document.getElementById('editIndex').value);
+      const nombre1 = document.getElementById('editNombre1').value.trim();
+      const nombre2 = document.getElementById('editNombre2').value.trim();
+      
+      if (!nombre1 || !nombre2) { 
+        alert('Escribe ambos nombres'); 
+        return; 
+      }
+      
+      let turnosPorDia = [];
+      for (let i = 0; i < DIAS.length; i++) {
+        let checks = [...f.querySelectorAll(`input[name="editDia${i}"]:checked`)].map(x => x.value);
+        if (checks.length === 0) { 
+          alert(`Selecciona al menos un turno para el día ${DIAS[i]}`); 
+          return; 
+        }
+        turnosPorDia.push(checks);
+      }
+      
+      let parejas = cargarParejas();
+      const parejaAnterior = parejas[index];
+      parejas[index] = { nombre1, nombre2, turnosPorDia };
+      guardarParejas(parejas);
+      
+      // Registrar la acción
+      registrarCambio('Pareja Editada', `Se modificó "${parejaAnterior.nombre1} & ${parejaAnterior.nombre2}" → "${nombre1} & ${nombre2}"`);
+      
+      cancelarEdicion();
+      renderListaParejas();
+      renderTabla();
+      alert('¡Pareja actualizada exitosamente!');
+    };
+
+    // Generar tabla de asignaciones con distribución automática
+    function renderTabla() {
+      const parejas = cargarParejas();
+      if (parejas.length === 0) { 
+        document.getElementById('tablaAsignaciones').innerHTML = "Aún no hay registros."; 
+        return; 
+      }
+      
+      // Generar asignaciones automáticas
+      const asignaciones = generarAsignacionesAutomaticas(parejas);
+      
+      let html = `<table><thead><tr>
+        <th>Día</th>
+        <th>Turno</th>
+        <th>Pareja</th>
+        <th>Tareas asignadas</th>
+      </tr></thead><tbody>`;
+      
+      for (let dia = 0; dia < DIAS.length; dia++) {
+        for (let t = 0; t < TURNOS.length; t++) {
+          const pareja = asignaciones[dia][t];
+          html += `<tr>
+            <td>${DIAS[dia]}</td>
+            <td>${TURNOS[t].hora}</td>
+            <td>${pareja ? pareja.nombre1 + " & " + pareja.nombre2 : "-"}</td>
+            <td>${pareja ? TAREAS.join("<br>") : "-"}</td>
+          </tr>`;
+        }
+      }
+      html += "</tbody></table>";
+      document.getElementById('tablaAsignaciones').innerHTML = html;
+      
+      // Mostrar estadísticas de distribución
+      mostrarEstadisticas(asignaciones, parejas);
+    }
+
+    // Mostrar estadísticas de distribución
+    function mostrarEstadisticas(asignaciones, parejas) {
+      const conteoTurnos = {};
+      const totalTurnos = DIAS.length * TURNOS.length;
+      let turnosAsignados = 0;
+      
+      // Contar turnos por pareja
+      parejas.forEach(pareja => {
+        const key = pareja.nombre1 + ' & ' + pareja.nombre2;
+        conteoTurnos[key] = 0;
+      });
+      
+      // Contar asignaciones
+      for (let dia = 0; dia < DIAS.length; dia++) {
+        for (let t = 0; t < TURNOS.length; t++) {
+          const pareja = asignaciones[dia][t];
+          if (pareja) {
+            const key = pareja.nombre1 + ' & ' + pareja.nombre2;
+            conteoTurnos[key]++;
+            turnosAsignados++;
+          }
+        }
+      }
+      
+      let htmlStats = `<div class="form-section">
+        <h3>📊 Estadísticas de distribución</h3>
+        <p><strong>Turnos asignados:</strong> ${turnosAsignados} de ${totalTurnos} (${((turnosAsignados/totalTurnos)*100).toFixed(1)}%)</p>
+        <table style="margin-top: 10px;">
+          <thead>
+            <tr><th>Pareja</th><th>Turnos asignados</th><th>Porcentaje</th></tr>
+          </thead>
+          <tbody>`;
+      
+      Object.entries(conteoTurnos).forEach(([pareja, turnos]) => {
+        const porcentaje = turnosAsignados > 0 ? ((turnos / turnosAsignados) * 100).toFixed(1) : 0;
+        htmlStats += `<tr>
+          <td>${pareja}</td>
+          <td>${turnos}</td>
+          <td>${porcentaje}%</td>
+        </tr>`;
+      });
+      
+      htmlStats += `</tbody></table></div>`;
+      document.getElementById('estadisticasDistribucion').innerHTML = htmlStats;
+    }
+
+    // Generar asignaciones automáticas con rotación sistemática
+    function generarAsignacionesAutomaticas(parejas) {
+      const asignaciones = [];
+      
+      if (parejas.length === 0) {
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          asignaciones[dia] = [null, null, null];
+        }
+        return asignaciones;
+      }
+      
+      // Crear tabla de disponibilidad
+      const disponibilidad = [];
+      for (let dia = 0; dia < DIAS.length; dia++) {
+        disponibilidad[dia] = [];
+        for (let t = 0; t < TURNOS.length; t++) {
+          disponibilidad[dia][t] = parejas.filter(pareja => 
+            pareja.turnosPorDia[dia].includes(TURNOS[t].id)
+          );
+        }
+      }
+      
+      // Algoritmo de rotación sistemática
+      let contadorGlobal = 0;
+      const ultimaAsignacion = {}; // Para evitar repeticiones consecutivas
+      
+      for (let dia = 0; dia < DIAS.length; dia++) {
+        asignaciones[dia] = [];
+        
+        for (let t = 0; t < TURNOS.length; t++) {
+          const parejasDisponibles = disponibilidad[dia][t];
+          let parejaSeleccionada = null;
+          
+          if (parejasDisponibles.length === 0) {
+            parejaSeleccionada = null;
+          } else if (parejasDisponibles.length === 1) {
+            parejaSeleccionada = parejasDisponibles[0];
+          } else {
+            // Buscar pareja que no haya trabajado recientemente
+            let mejorPareja = null;
+            let mejorPuntuacion = -1;
+            
+            parejasDisponibles.forEach((pareja, index) => {
+              const key = pareja.nombre1 + '&' + pareja.nombre2;
+              const ultimoDia = ultimaAsignacion[key] || -10;
+              const diasSinTrabajar = (dia * TURNOS.length + t) - ultimoDia;
+              
+              // Dar preferencia a parejas que han descansado más
+              let puntuacion = diasSinTrabajar;
+              
+              // Si es el primer día o hay empate, usar rotación cíclica
+              if (!mejorPareja || puntuacion > mejorPuntuacion) {
+                mejorPareja = pareja;
+                mejorPuntuacion = puntuacion;
+              } else if (puntuacion === mejorPuntuacion) {
+                // En caso de empate, usar rotación cíclica
+                if ((contadorGlobal + index) % parejasDisponibles.length < (contadorGlobal + parejasDisponibles.indexOf(mejorPareja)) % parejasDisponibles.length) {
+                  mejorPareja = pareja;
+                }
+              }
+            });
+            
+            parejaSeleccionada = mejorPareja;
+          }
+          
+          asignaciones[dia][t] = parejaSeleccionada;
+          
+          if (parejaSeleccionada) {
+            const key = parejaSeleccionada.nombre1 + '&' + parejaSeleccionada.nombre2;
+            ultimaAsignacion[key] = dia * TURNOS.length + t;
+            contadorGlobal++;
+          }
+        }
+      }
+      
+      return asignaciones;
+    }
+
+    // Función para redistribuir turnos
+    function redistribuirTurnos() {
+      // Mezclar aleatoriamente las parejas para generar nueva distribución
+      const parejas = cargarParejas();
+      if (parejas.length < 2) {
+        alert('Necesitas al menos 2 parejas registradas para redistribuir.');
+        return;
+      }
+      
+      // Crear copia mezclada de las parejas
+      const parejasMezcladas = [...parejas];
+      for (let i = parejasMezcladas.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [parejasMezcladas[i], parejasMezcladas[j]] = [parejasMezcladas[j], parejasMezcladas[i]];
+      }
+      
+      // Regenerar la tabla con el nuevo orden
+      renderTabla();
+      
+      // Registrar la acción
+      registrarCambio('Turnos Redistribuidos', 'Se aplicó redistribución aleatoria de turnos');
+      
+      alert('¡Turnos redistribuidos exitosamente!');
+    }
+
+    // Función para generar patrón organizado consecutivo con 2 turnos
+    function generarPatronOrganizado() {
+      const parejas = cargarParejas();
+      if (parejas.length < 3) {
+        alert('Necesitas al menos 3 parejas registradas para este patrón (Billy&Chex, Humber&Casimiro, Josh&Axel).');
+        return;
+      }
+      
+      // Sobrescribir temporalmente la función de asignaciones
+      window.generarAsignacionesAutomaticas = function(parejas) {
+        const asignaciones = [];
+        
+        // Obtener las tres parejas para el patrón
+        const pareja1 = parejas[0]; // Billy & Chex
+        const pareja2 = parejas[1]; // Humber & Casimiro  
+        const pareja3 = parejas[2]; // Josh & Axel
+        
+        // Patrón consecutivo con solo 2 turnos:
+        // Billy&Chex: Jueves 8-16
+        // Humber&Casimiro: Viernes 16-00
+        // Josh&Axel: Sábado 8-16
+        // Billy&Chex: Domingo 16-00
+        // Humber&Casimiro: Lunes 8-16
+        // Josh&Axel: Martes 16-00
+        // Billy&Chex: Miércoles 8-16
+        // Humber&Casimiro: Jueves 16-00
+        
+        const patronConsecutivo = [
+          // [turno_8-16, turno_16-00]
+          [pareja1, null],        // Jueves: Billy&Chex 8-16
+          [null, pareja2],        // Viernes: Humber&Casimiro 16-00
+          [pareja3, null],        // Sábado: Josh&Axel 8-16
+          [null, pareja1],        // Domingo: Billy&Chex 16-00
+          [pareja2, null],        // Lunes: Humber&Casimiro 8-16
+          [null, pareja3],        // Martes: Josh&Axel 16-00
+          [pareja1, null],        // Miércoles: Billy&Chex 8-16
+          [null, pareja2]         // Jueves: Humber&Casimiro 16-00
+        ];
+        
+        // Crear tabla de disponibilidad
+        const disponibilidad = [];
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          disponibilidad[dia] = [];
+          for (let t = 0; t < TURNOS.length; t++) {
+            disponibilidad[dia][t] = parejas.filter(pareja => 
+              pareja.turnosPorDia[dia].includes(TURNOS[t].id)
+            );
+          }
+        }
+        
+        // Aplicar el patrón consecutivo
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          asignaciones[dia] = [];
+          
+          for (let t = 0; t < TURNOS.length; t++) {
+            const parejaPatron = patronConsecutivo[dia][t];
+            const parejasDisponibles = disponibilidad[dia][t];
+            let parejaAsignada = null;
+            
+            // Verificar si la pareja del patrón está disponible para este turno
+            if (parejaPatron && parejasDisponibles.find(p => 
+              p.nombre1 === parejaPatron.nombre1 && 
+              p.nombre2 === parejaPatron.nombre2)) {
+              parejaAsignada = parejaPatron;
+            }
+            // Si no está disponible, no asignar nadie (mantener el patrón)
+            
+            asignaciones[dia][t] = parejaAsignada;
+          }
+        }
+        
+        return asignaciones;
+      };
+      
+      renderTabla();
+      
+      // Registrar la acción
+      registrarCambio('Patrón Consecutivo', 'Se aplicó patrón consecutivo con 3 parejas');
+      
+      alert('¡Patrón consecutivo aplicado! Billy&Chex, Humber&Casimiro, Josh&Axel se alternan con un turno cada uno.');
+    }
+
+    // Función para restaurar el algoritmo original
+    function restaurarAlgoritmoOriginal() {
+      // Restaurar la función original de asignaciones
+      window.generarAsignacionesAutomaticas = function(parejas) {
+        const asignaciones = [];
+        
+        if (parejas.length === 0) {
+          for (let dia = 0; dia < DIAS.length; dia++) {
+            asignaciones[dia] = [null, null];
+          }
+          return asignaciones;
+        }
+        
+        // Crear tabla de disponibilidad
+        const disponibilidad = [];
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          disponibilidad[dia] = [];
+          for (let t = 0; t < TURNOS.length; t++) {
+            disponibilidad[dia][t] = parejas.filter(pareja => 
+              pareja.turnosPorDia[dia].includes(TURNOS[t].id)
+            );
+          }
+        }
+        
+        // Algoritmo de rotación sistemática original
+        let contadorGlobal = 0;
+        const ultimaAsignacion = {}; // Para evitar repeticiones consecutivas
+        
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          asignaciones[dia] = [];
+          
+          for (let t = 0; t < TURNOS.length; t++) {
+            const parejasDisponibles = disponibilidad[dia][t];
+            let parejaSeleccionada = null;
+            
+            if (parejasDisponibles.length === 0) {
+              parejaSeleccionada = null;
+            } else if (parejasDisponibles.length === 1) {
+              parejaSeleccionada = parejasDisponibles[0];
+            } else {
+              // Buscar pareja que no haya trabajado recientemente
+              let mejorPareja = null;
+              let mejorPuntuacion = -1;
+              
+              parejasDisponibles.forEach((pareja, index) => {
+                const key = pareja.nombre1 + '&' + pareja.nombre2;
+                const ultimoDia = ultimaAsignacion[key] || -10;
+                const diasSinTrabajar = (dia * TURNOS.length + t) - ultimoDia;
+                
+                // Dar preferencia a parejas que han descansado más
+                let puntuacion = diasSinTrabajar;
+                
+                // Si es el primer día o hay empate, usar rotación cíclica
+                if (!mejorPareja || puntuacion > mejorPuntuacion) {
+                  mejorPareja = pareja;
+                  mejorPuntuacion = puntuacion;
+                } else if (puntuacion === mejorPuntuacion) {
+                  // En caso de empate, usar rotación cíclica
+                  if ((contadorGlobal + index) % parejasDisponibles.length < (contadorGlobal + parejasDisponibles.indexOf(mejorPareja)) % parejasDisponibles.length) {
+                    mejorPareja = pareja;
+                  }
+                }
+              });
+              
+              parejaSeleccionada = mejorPareja;
+            }
+            
+            asignaciones[dia][t] = parejaSeleccionada;
+            
+            if (parejaSeleccionada) {
+              const key = parejaSeleccionada.nombre1 + '&' + parejaSeleccionada.nombre2;
+              ultimaAsignacion[key] = dia * TURNOS.length + t;
+              contadorGlobal++;
+            }
+          }
+        }
+        
+        return asignaciones;
+      };
+      
+      renderTabla();
+      
+      // Registrar la acción
+      registrarCambio('Algoritmo Original', 'Se restauró algoritmo original de distribución equitativa');
+      
+      alert('¡Algoritmo original restaurado! Distribución equitativa activada.');
+    }
+
+    // Función para cargar datos de ejemplo
+    function cargarDatosEjemplo() {
+      if (confirm('¿Deseas cargar datos de ejemplo? Esto agregará parejas de prueba.')) {
+        const parejasEjemplo = [
+          {
+            nombre1: "Billy",
+            nombre2: "Chex", 
+            turnosPorDia: [
+              ["t1", "t2"], // Jueves: ambos turnos disponibles
+              ["t1", "t2"], // Viernes: ambos turnos disponibles
+              ["t1", "t2"], // Sábado: ambos turnos disponibles
+              ["t1", "t2"], // Domingo: ambos turnos disponibles
+              ["t1", "t2"], // Lunes: ambos turnos disponibles
+              ["t1", "t2"], // Martes: ambos turnos disponibles
+              ["t1", "t2"], // Miércoles: ambos turnos disponibles
+              ["t1", "t2"]  // Jueves: ambos turnos disponibles
+            ]
+          },
+          {
+            nombre1: "Humber",
+            nombre2: "Casimiro",
+            turnosPorDia: [
+              ["t1", "t2"], // Jueves: ambos turnos disponibles
+              ["t1", "t2"], // Viernes: ambos turnos disponibles
+              ["t1", "t2"], // Sábado: ambos turnos disponibles
+              ["t1", "t2"], // Domingo: ambos turnos disponibles
+              ["t1", "t2"], // Lunes: ambos turnos disponibles
+              ["t1", "t2"], // Martes: ambos turnos disponibles
+              ["t1", "t2"], // Miércoles: ambos turnos disponibles
+              ["t1", "t2"]  // Jueves: ambos turnos disponibles
+            ]
+          },
+          {
+            nombre1: "Josh",
+            nombre2: "Axel",
+            turnosPorDia: [
+              ["t1", "t2"], // Jueves: ambos turnos disponibles
+              ["t1", "t2"], // Viernes: ambos turnos disponibles
+              ["t1", "t2"], // Sábado: ambos turnos disponibles
+              ["t1", "t2"], // Domingo: ambos turnos disponibles
+              ["t1", "t2"], // Lunes: ambos turnos disponibles
+              ["t1", "t2"], // Martes: ambos turnos disponibles
+              ["t1", "t2"], // Miércoles: ambos turnos disponibles
+              ["t1", "t2"]  // Jueves: ambos turnos disponibles
+            ]
+          }
+        ];
+        
+        const parejasActuales = cargarParejas();
+        const parejasNuevas = [...parejasActuales, ...parejasEjemplo];
+        guardarParejas(parejasNuevas);
+        
+        // Registrar la acción
+        registrarCambio('Datos de Ejemplo', 'Se cargaron datos de ejemplo (Billy&Chex, Humber&Casimiro, Josh&Axel)');
+        
+        renderListaParejas();
+        renderTabla();
+        alert('¡Datos de ejemplo cargados! Billy&Chex, Humber&Casimiro y Josh&Axel están listos para el patrón consecutivo con 2 turnos.');
+      }
+    }
+    renderTabla();
+    renderListaParejas();
+
+    // Descargar CSV
+    function descargarCSV() {
+      const parejas = cargarParejas();
+      let filas = [["Día", "Turno", "Pareja", "Tareas asignadas"]];
+      for (let dia = 0; dia < DIAS.length; dia++) {
+        for (let t = 0; t < TURNOS.length; t++) {
+          let pareja = parejas.find(p => p.turnosPorDia[dia].includes(TURNOS[t].id));
+          filas.push([
+            DIAS[dia],
+            TURNOS[t].hora,
+            pareja ? pareja.nombre1 + " & " + pareja.nombre2 : "-",
+            pareja ? TAREAS.join(" | ") : "-"
+          ]);
+        }
+      }
+      let csv = filas.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      let blob = new Blob([csv], { type: 'text/csv' });
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "asignaciones_turnos.csv";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+  </script>
+  </div> <!-- Fin del contenido principal -->
+</body>
+</html>
