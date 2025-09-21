@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Sistema de Datos Compartidos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .demo-container { max-width: 800px; margin: 0 auto; }
+        .demo-card { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status { padding: 15px; border-radius: 5px; margin: 15px 0; font-weight: bold; text-align: center; }
+        .status.connected { background: #e8f5e8; color: #2d5016; border-left: 4px solid #4caf50; }
+        .status.disconnected { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .btn { background: #2196f3; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #1976d2; }
+        .btn-success { background: #4caf50; }
+        .btn-success:hover { background: #45a049; }
+        .demo-window { border: 2px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; min-height: 200px; }
+        .demo-window h3 { margin-top: 0; color: #333; }
+        .data-display { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-card">
+            <h1>🌐 Demostración del Sistema de Datos Compartidos</h1>
+            <p>Esta página demuestra cómo funcionaría la sincronización de datos entre múltiples dispositivos/usuarios.</p>
+            
+            <div id="connectionStatus" class="status disconnected">
+                🔄 Iniciando sistema...
+            </div>
+        </div>
+
+        <div class="demo-card">
+            <h2>💾 Simulador de Dispositivos</h2>
+            <p>Simula dos dispositivos diferentes usando el mismo sistema de datos compartidos:</p>
+            
+            <div style="display: flex; gap: 20px;">
+                <div class="demo-window" style="flex: 1;">
+                    <h3>📱 Dispositivo A (Tu navegador actual)</h3>
+                    <div id="deviceA-data" class="data-display">Cargando...</div>
+                    <button class="btn" onclick="addDataFromA()">➕ Agregar dato desde A</button>
+                    <button class="btn btn-success" onclick="refreshA()">🔄 Actualizar A</button>
+                </div>
+                
+                <div class="demo-window" style="flex: 1;">
+                    <h3>💻 Dispositivo B (Simulado)</h3>
+                    <div id="deviceB-data" class="data-display">Cargando...</div>
+                    <button class="btn" onclick="addDataFromB()">➕ Agregar dato desde B</button>
+                    <button class="btn btn-success" onclick="refreshB()">🔄 Actualizar B</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-card">
+            <h2>🎯 Funcionalidades Demostradas</h2>
+            <ul>
+                <li>✅ <strong>Persistencia:</strong> Los datos se guardan permanentemente</li>
+                <li>✅ <strong>Sincronización:</strong> Los cambios aparecen en ambos dispositivos</li>
+                <li>✅ <strong>Tiempo real:</strong> Actualización automática cada 15 segundos</li>
+                <li>✅ <strong>Offline-first:</strong> Funciona sin internet, sincroniza cuando hay conexión</li>
+                <li>✅ <strong>Resistente a fallos:</strong> Nunca pierde datos</li>
+            </ul>
+            
+            <button class="btn" onclick="clearDemo()">🗑️ Limpiar Demo</button>
+            <button class="btn btn-success" onclick="autoDemo()">🎪 Demo Automático</button>
+        </div>
+
+        <div class="demo-card">
+            <h2>📊 Log de Actividad</h2>
+            <div id="activityLog" class="data-display" style="height: 150px; overflow-y: auto;">
+                Iniciando sistema de demostración...<br>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulación del sistema de datos compartidos
+        let sharedData = JSON.parse(localStorage.getItem('demo-shared-data') || '{"items": [], "lastSync": 0}');
+        let isConnected = true;
+        let autoSyncInterval;
+        
+        // Simular conexión/desconexión aleatoriamente
+        function updateConnectionStatus() {
+            // 90% de probabilidad de estar conectado
+            isConnected = Math.random() > 0.1;
+            
+            const statusElement = document.getElementById('connectionStatus');
+            if (isConnected) {
+                statusElement.className = 'status connected';
+                statusElement.innerHTML = '✅ Conectado - Sincronización activa';
+            } else {
+                statusElement.className = 'status disconnected';
+                statusElement.innerHTML = '⚠️ Sin conexión - Usando datos locales';
+            }
+        }
+        
+        // Guardar datos
+        function saveSharedData() {
+            sharedData.lastSync = Date.now();
+            localStorage.setItem('demo-shared-data', JSON.stringify(sharedData));
+            
+            if (isConnected) {
+                log('☁️ Datos sincronizados en servidor');
+            } else {
+                log('💾 Datos guardados localmente (sin conexión)');
+            }
+        }
+        
+        // Agregar dato desde dispositivo A
+        function addDataFromA() {
+            const newItem = {
+                id: Date.now(),
+                device: 'Dispositivo A',
+                data: `Pareja ${Math.floor(Math.random() * 100)}`,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            sharedData.items.unshift(newItem);
+            saveSharedData();
+            updateDisplays();
+            log(`📱 Dispositivo A agregó: ${newItem.data}`);
+        }
+        
+        // Agregar dato desde dispositivo B (simulado)
+        function addDataFromB() {
+            const newItem = {
+                id: Date.now() + 1,
+                device: 'Dispositivo B',
+                data: `Usuario ${Math.floor(Math.random() * 100)}`,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            sharedData.items.unshift(newItem);
+            saveSharedData();
+            updateDisplays();
+            log(`💻 Dispositivo B agregó: ${newItem.data}`);
+            
+            // Simular notificación de sincronización
+            setTimeout(() => {
+                log('🔄 Cambios sincronizados desde Dispositivo B');
+            }, 1000);
+        }
+        
+        // Actualizar displays
+        function updateDisplays() {
+            const deviceAData = sharedData.items
+                .slice(0, 5)
+                .map(item => `${item.timestamp} - ${item.data} (desde ${item.device})`)
+                .join('<br>');
+            
+            const deviceBData = sharedData.items
+                .slice(0, 5)
+                .map(item => `${item.timestamp} - ${item.data} (desde ${item.device})`)
+                .join('<br>');
+            
+            document.getElementById('deviceA-data').innerHTML = deviceAData || 'Sin datos';
+            document.getElementById('deviceB-data').innerHTML = deviceBData || 'Sin datos';
+        }
+        
+        // Actualizar dispositivo específico
+        function refreshA() {
+            updateDisplays();
+            log('🔄 Dispositivo A actualizado');
+        }
+        
+        function refreshB() {
+            updateDisplays();
+            log('🔄 Dispositivo B actualizado');
+        }
+        
+        // Limpiar demo
+        function clearDemo() {
+            sharedData = {items: [], lastSync: 0};
+            saveSharedData();
+            updateDisplays();
+            log('🗑️ Datos de demostración eliminados');
+        }
+        
+        // Demo automático
+        function autoDemo() {
+            log('🎪 Iniciando demostración automática...');
+            
+            let step = 0;
+            const demoInterval = setInterval(() => {
+                step++;
+                
+                switch(step) {
+                    case 1:
+                        addDataFromA();
+                        break;
+                    case 3:
+                        addDataFromB();
+                        break;
+                    case 5:
+                        addDataFromA();
+                        break;
+                    case 7:
+                        addDataFromB();
+                        break;
+                    case 9:
+                        log('🎯 Demostración completada - ¡Los datos se sincronizaron!');
+                        clearInterval(demoInterval);
+                        break;
+                }
+            }, 2000);
+        }
+        
+        // Log de actividad
+        function log(message) {
+            const logElement = document.getElementById('activityLog');
+            const time = new Date().toLocaleTimeString();
+            logElement.innerHTML += `${time}: ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConnectionStatus();
+            updateDisplays();
+            log('✅ Sistema de demostración iniciado');
+            
+            // Simular cambios de conexión
+            setInterval(updateConnectionStatus, 10000);
+            
+            // Auto-sincronización cada 15 segundos
+            autoSyncInterval = setInterval(() => {
+                if (isConnected) {
+                    log('🔄 Sincronización automática ejecutada');
+                    updateDisplays();
+                }
+            }, 15000);
+        });
+    </script>
+</body>
+</html>
