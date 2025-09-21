@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <title>Asignación de Turnos y Tareas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; }
     h1, h2 { color: #2d71a1; }
@@ -89,9 +94,116 @@
       font-size: 0.8em; 
     }
     
-    @media (max-width: 700px) {
-      table, thead, tbody, th, td, tr { display: block; }
-      td, th { min-width: 120px; }
+    /* === MEJORAS RESPONSIVE PARA MÓVILES === */
+    @media (max-width: 768px) {
+      /* Ajustes generales para móviles */
+      body { 
+        margin: 10px; 
+        font-size: 14px; 
+      }
+      
+      /* Botones más grandes y táctiles */
+      .btn { 
+        padding: 12px 20px; 
+        margin: 5px; 
+        font-size: 14px; 
+        min-height: 44px; /* Tamaño táctil recomendado */
+        width: 100%; 
+        max-width: 300px;
+      }
+      
+      /* Tablas responsivas */
+      table { 
+        font-size: 12px; 
+        overflow-x: auto; 
+        display: block; 
+        white-space: nowrap;
+      }
+      
+      /* Para tablas muy anchas, permitir scroll horizontal */
+      .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      th, td { 
+        padding: 8px 6px; 
+        min-width: 80px; 
+      }
+      
+      /* Formularios más amigables */
+      .form-section { 
+        padding: 15px; 
+        margin-bottom: 20px; 
+      }
+      
+      input[type="text"], select, textarea { 
+        width: 100%; 
+        padding: 12px; 
+        font-size: 16px; /* Evita zoom en iOS */
+        margin-bottom: 10px;
+        box-sizing: border-box;
+      }
+      
+      /* Login responsivo */
+      .login-card { 
+        padding: 25px; 
+        margin: 10px; 
+        width: calc(100% - 20px);
+      }
+      
+      /* Mejor espaciado en títulos */
+      h1 { 
+        font-size: 24px; 
+        margin-bottom: 15px; 
+      }
+      
+      h2 { 
+        font-size: 20px; 
+        margin-bottom: 12px; 
+      }
+      
+      h3 { 
+        font-size: 18px; 
+        margin-bottom: 10px; 
+      }
+      
+      /* Notas más grandes */
+      textarea { 
+        min-height: 120px; 
+        resize: vertical;
+      }
+      
+      /* Auditoría compacta */
+      .audit-section { 
+        padding: 10px; 
+        font-size: 13px; 
+      }
+      
+      .audit-entry { 
+        padding: 6px; 
+      }
+    }
+    
+    /* Para pantallas muy pequeñas */
+    @media (max-width: 480px) {
+      .btn { 
+        padding: 15px 10px; 
+        font-size: 16px; 
+      }
+      
+      table { 
+        font-size: 11px; 
+      }
+      
+      th, td { 
+        padding: 6px 4px; 
+        min-width: 60px; 
+      }
+      
+      .login-card { 
+        padding: 20px 15px; 
+      }
     }
   </style>
 </head>
@@ -250,14 +362,88 @@
   </div>
 
   <script>
+    // === CONFIGURACIÓN DE FIREBASE ===
+    
+    // Configuración de Firebase (usa una base de datos demo pública)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDemoKey123",
+      authDomain: "nomina-oficina-demo.firebaseapp.com",
+      databaseURL: "https://nomina-oficina-demo-default-rtdb.firebaseio.com/",
+      projectId: "nomina-oficina-demo",
+      storageBucket: "nomina-oficina-demo.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:demo123"
+    };
+    
+    // Inicializar Firebase
+    let database;
+    let isFirebaseAvailable = false;
+    
+    try {
+      firebase.initializeApp(firebaseConfig);
+      database = firebase.database();
+      isFirebaseAvailable = true;
+      console.log('🔥 Firebase inicializado correctamente - Datos compartidos activados');
+    } catch (error) {
+      console.warn('⚠️ Firebase no disponible, usando localStorage:', error.message);
+      isFirebaseAvailable = false;
+    }
+    
+    // === FUNCIONES DE ALMACENAMIENTO UNIVERSAL ===
+    
+    // Función para guardar datos (Firebase o localStorage)
+    async function guardarDatos(clave, datos) {
+      if (isFirebaseAvailable) {
+        try {
+          await database.ref(clave).set(datos);
+          console.log(`✅ Datos guardados en Firebase: ${clave}`);
+        } catch (error) {
+          console.warn(`⚠️ Error en Firebase, usando localStorage: ${error.message}`);
+          localStorage.setItem(clave, JSON.stringify(datos));
+        }
+      } else {
+        localStorage.setItem(clave, JSON.stringify(datos));
+      }
+    }
+    
+    // Función para cargar datos (Firebase o localStorage)
+    async function cargarDatos(clave, valorPorDefecto = null) {
+      if (isFirebaseAvailable) {
+        try {
+          const snapshot = await database.ref(clave).once('value');
+          const datos = snapshot.val();
+          return datos !== null ? datos : valorPorDefecto;
+        } catch (error) {
+          console.warn(`⚠️ Error en Firebase, usando localStorage: ${error.message}`);
+          const datosLocal = localStorage.getItem(clave);
+          return datosLocal ? JSON.parse(datosLocal) : valorPorDefecto;
+        }
+      } else {
+        const datosLocal = localStorage.getItem(clave);
+        return datosLocal ? JSON.parse(datosLocal) : valorPorDefecto;
+      }
+    }
+    
+    // Función para eliminar datos
+    async function eliminarDatos(clave) {
+      if (isFirebaseAvailable) {
+        try {
+          await database.ref(clave).remove();
+        } catch (error) {
+          console.warn(`⚠️ Error eliminando en Firebase: ${error.message}`);
+        }
+      }
+      localStorage.removeItem(clave);
+    }
+    
     // === SISTEMA DE USUARIO Y AUDITORÍA ===
     
     let currentUser = null;
     
     // Inicialización del sistema
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       // Verificar si hay usuario guardado
-      const savedUser = localStorage.getItem('currentUser');
+      const savedUser = await cargarDatos('currentUser');
       if (savedUser) {
         currentUser = savedUser;
         mostrarContenidoPrincipal();
@@ -267,7 +453,7 @@
     });
     
     // Manejar el login
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const userName = document.getElementById('userName').value.trim();
       
@@ -277,10 +463,10 @@
       }
       
       currentUser = userName;
-      localStorage.setItem('currentUser', userName);
+      await guardarDatos('currentUser', userName);
       
       // Registrar el login
-      registrarCambio('Login', `${userName} ingresó al sistema`);
+      await registrarCambio('Login', `${userName} ingresó al sistema`);
       
       mostrarContenidoPrincipal();
     });
@@ -308,10 +494,10 @@
     }
     
     // Cambiar usuario
-    function cambiarUsuario() {
+    async function cambiarUsuario() {
       if (confirm('¿Estás seguro de que quieres cambiar de usuario? Se cerrará la sesión actual.')) {
-        registrarCambio('Logout', `${currentUser} cerró sesión`);
-        localStorage.removeItem('currentUser');
+        await registrarCambio('Logout', `${currentUser} cerró sesión`);
+        await eliminarDatos('currentUser');
         currentUser = null;
         document.getElementById('userName').value = '';
         mostrarPantallaLogin();
@@ -321,8 +507,8 @@
     // === SISTEMA DE AUDITORÍA ===
     
     // Registrar cambios
-    function registrarCambio(accion, descripcion) {
-      const auditoria = cargarAuditoria();
+    async function registrarCambio(accion, descripcion) {
+      const auditoria = await cargarAuditoria();
       const cambio = {
         timestamp: new Date().toISOString(),
         usuario: currentUser,
@@ -337,22 +523,22 @@
         auditoria.splice(50);
       }
       
-      localStorage.setItem('auditoria', JSON.stringify(auditoria));
+      await guardarDatos('auditoria', auditoria);
       mostrarAuditoria();
     }
     
     // Cargar auditoría
-    function cargarAuditoria() {
+    async function cargarAuditoria() {
       try {
-        return JSON.parse(localStorage.getItem('auditoria')) || [];
+        return await cargarDatos('auditoria', []);
       } catch {
         return [];
       }
     }
     
     // Mostrar auditoría
-    function mostrarAuditoria() {
-      const auditoria = cargarAuditoria();
+    async function mostrarAuditoria() {
+      const auditoria = await cargarAuditoria();
       const container = document.getElementById('auditLog');
       
       if (auditoria.length === 0) {
@@ -407,15 +593,15 @@
     // === SISTEMA DE NOTAS ===
     
     // Cargar notas al inicializar (solo el textarea)
-    function cargarNotas() {
-      const notas = localStorage.getItem('notasEditor') || '';
+    async function cargarNotas() {
+      const notas = await cargarDatos('notasEditor', '');
       document.getElementById('notasTextarea').value = notas;
     }
     
     // Mostrar notas guardadas
-    function mostrarNotasGuardadas() {
-      const notasGuardadas = localStorage.getItem('notasGuardadas') || '';
-      const ultimaModificacion = localStorage.getItem('ultimaModificacionNotas');
+    async function mostrarNotasGuardadas() {
+      const notasGuardadas = await cargarDatos('notasGuardadas', '');
+      const ultimaModificacion = await cargarDatos('ultimaModificacionNotas');
       const container = document.getElementById('notasGuardadas');
       const timestampElement = document.getElementById('ultimaModificacion');
       
@@ -433,7 +619,7 @@
     }
     
     // Guardar notas
-    function guardarNotas() {
+    async function guardarNotas() {
       const notasEditor = document.getElementById('notasTextarea').value;
       
       if (!notasEditor.trim()) {
@@ -442,44 +628,44 @@
       }
       
       // Guardar las notas del editor en las notas guardadas
-      localStorage.setItem('notasGuardadas', notasEditor);
-      localStorage.setItem('ultimaModificacionNotas', new Date().toISOString());
+      await guardarDatos('notasGuardadas', notasEditor);
+      await guardarDatos('ultimaModificacionNotas', new Date().toISOString());
       
       // Limpiar el editor después de guardar
       document.getElementById('notasTextarea').value = '';
-      localStorage.removeItem('notasEditor');
+      await eliminarDatos('notasEditor');
       
       // Actualizar la vista
       mostrarNotasGuardadas();
       
       // Registrar la acción
       const preview = notasEditor.length > 50 ? notasEditor.substring(0, 50) + '...' : notasEditor;
-      registrarCambio('Notas Guardadas', `Se guardaron notas: "${preview}"`);
+      await registrarCambio('Notas Guardadas', `Se guardaron notas: "${preview}"`);
       
       alert('📝 Notas guardadas exitosamente y editor limpiado.');
     }
     
     // Limpiar notas guardadas
-    function limpiarNotasGuardadas() {
+    async function limpiarNotasGuardadas() {
       if (confirm('¿Estás seguro de que quieres limpiar las notas guardadas?\n\nEsta acción no se puede deshacer.')) {
-        localStorage.removeItem('notasGuardadas');
-        localStorage.removeItem('ultimaModificacionNotas');
+        await eliminarDatos('notasGuardadas');
+        await eliminarDatos('ultimaModificacionNotas');
         
         // Actualizar la vista
         mostrarNotasGuardadas();
         
         // Registrar la acción
-        registrarCambio('Notas Eliminadas', 'Se eliminaron las notas guardadas');
+        await registrarCambio('Notas Eliminadas', 'Se eliminaron las notas guardadas');
         
         alert('�️ Notas guardadas eliminadas exitosamente.');
       }
     }
     
     // Limpiar solo el editor de texto
-    function limpiarTextarea() {
+    async function limpiarTextarea() {
       if (confirm('¿Limpiar el contenido del editor?\n\nEsto solo limpiará lo que estás escribiendo, no las notas guardadas.')) {
         document.getElementById('notasTextarea').value = '';
-        localStorage.removeItem('notasEditor');
+        await eliminarDatos('notasEditor');
         alert('📄 Editor limpiado.');
       }
     }
@@ -488,8 +674,8 @@
     document.addEventListener('DOMContentLoaded', function() {
       const textarea = document.getElementById('notasTextarea');
       if (textarea) {
-        textarea.addEventListener('input', function() {
-          localStorage.setItem('notasEditor', this.value);
+        textarea.addEventListener('input', async function() {
+          await guardarDatos('notasEditor', this.value);
         });
       }
     });
@@ -539,18 +725,18 @@
 
     renderFormDias();
 
-    // Guardar y cargar datos con localStorage
-    function guardarParejas(parejas) {
-      localStorage.setItem('parejas', JSON.stringify(parejas));
+    // Guardar y cargar datos con Firebase/localStorage
+    async function guardarParejas(parejas) {
+      await guardarDatos('parejas', parejas);
     }
-    function cargarParejas() {
+    async function cargarParejas() {
       try {
-        return JSON.parse(localStorage.getItem('parejas')) || [];
+        return await cargarDatos('parejas', []);
       } catch { return []; }
     }
 
     // Registrar pareja y turnos
-    document.getElementById('registerForm').onsubmit = function(e) {
+    document.getElementById('registerForm').onsubmit = async function(e) {
       e.preventDefault();
       const f = e.target;
       const nombre1 = f.nombre1.value.trim();
@@ -562,12 +748,12 @@
         if (checks.length === 0) { alert(`Selecciona al menos un turno para el día ${DIAS[i]}`); return; }
         turnosPorDia.push(checks);
       }
-      let parejas = cargarParejas();
+      let parejas = await cargarParejas();
       parejas.push({ nombre1, nombre2, turnosPorDia });
-      guardarParejas(parejas);
+      await guardarParejas(parejas);
       
       // Registrar la acción
-      registrarCambio('Pareja Agregada', `Se registró la pareja "${nombre1} & ${nombre2}"`);
+      await registrarCambio('Pareja Agregada', `Se registró la pareja "${nombre1} & ${nombre2}"`);
       
       f.reset();
       renderFormDias();
@@ -586,7 +772,7 @@
         return;
       }
 
-      let html = `<table><thead><tr>
+      let html = `<div class="table-container"><table><thead><tr>
         <th>Pareja</th>
         <th>Turnos asignados</th>
         <th>Acciones</th>
@@ -613,13 +799,13 @@
         </tr>`;
       });
 
-      html += "</tbody></table>";
+      html += "</tbody></table></div>";
       container.innerHTML = html;
     }
 
     // Función para editar pareja
-    function editarPareja(index) {
-      const parejas = cargarParejas();
+    async function editarPareja(index) {
+      const parejas = await cargarParejas();
       const pareja = parejas[index];
       
       // Llenar el formulario de edición
