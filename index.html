@@ -5,10 +5,6 @@
   <title>Asignación de Turnos y Tareas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-  
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; }
     h1, h2 { color: #2d71a1; }
@@ -235,6 +231,11 @@
 
   <!-- Contenido principal (oculto inicialmente) -->
   <div id="mainContent" style="display: none;">
+    <!-- Indicador de estado de conexión -->
+    <div id="connectionStatus" style="background: #e3f2fd; padding: 8px; margin-bottom: 15px; border-radius: 5px; font-size: 0.9em; text-align: center;">
+      <span id="statusText">🔄 Conectando a la base de datos...</span>
+    </div>
+    
     <!-- Información del usuario actual -->
     <div class="user-info">
       <strong>👤 Usuario actual:</strong> <span id="currentUser"></span>
@@ -362,78 +363,253 @@
   </div>
 
   <script>
-    // === CONFIGURACIÓN DE FIREBASE ===
+    // === CONFIGURACIÓN DE ALMACENAMIENTO COMPARTIDO ===
     
-    // Configuración de Firebase (usa una base de datos demo pública)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDemoKey123",
-      authDomain: "nomina-oficina-demo.firebaseapp.com",
-      databaseURL: "https://nomina-oficina-demo-default-rtdb.firebaseio.com/",
-      projectId: "nomina-oficina-demo",
-      storageBucket: "nomina-oficina-demo.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:demo123"
-    };
+    // URL de la API JSON para datos compartidos (JSONBin.io es gratuito)
+    const API_URL = 'https://api.jsonbin.io/v3/b/67034567e41b4d34e4407f8a';
+    const API_KEY = '$2a$10$VJT.xOe8k3qKxO5qL6iGge9QQdTNI0bV1MkKQFdqmNAZ4mPxkNNJK';
     
-    // Inicializar Firebase
     let database;
-    let isFirebaseAvailable = false;
+    let isOnlineStorageAvailable = false;
     
-    try {
-      firebase.initializeApp(firebaseConfig);
-      database = firebase.database();
-      isFirebaseAvailable = true;
-      console.log('🔥 Firebase inicializado correctamente - Datos compartidos activados');
-    } catch (error) {
-      console.warn('⚠️ Firebase no disponible, usando localStorage:', error.message);
-      isFirebaseAvailable = false;
+    // Probar conexión con el almacenamiento en línea
+    async function testOnlineConnection() {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          isOnlineStorageAvailable = true;
+          console.log('✅ Almacenamiento en línea disponible');
+          actualizarEstadoConexion(true);
+          return true;
+        } else {
+          throw new Error('Respuesta no válida del servidor');
+        }
+      } catch (error) {
+        console.warn('⚠️ Almacenamiento en línea no disponible:', error.message);
+        isOnlineStorageAvailable = false;
+        actualizarEstadoConexion(false, 'Sin conexión a internet');
+        return false;
+      }
+    }
+    
+    // Inicializar sistema de almacenamiento
+    setTimeout(async () => {
+      await testOnlineConnection();
+      
+      // Configurar verificación periódica de conexión cada 30 segundos
+      setInterval(async () => {
+        await testOnlineConnection();
+      }, 30000);
+    }, 1000);
+    
+    // Función para actualizar el indicador de estado de conexión
+    function actualizarEstadoConexion(conectado, mensaje = '') {
+      const statusElement = document.getElementById('statusText');
+      const containerElement = document.getElementById('connectionStatus');
+      
+      if (!statusElement || !containerElement) return;
+      
+      if (conectado) {
+        statusElement.textContent = '✅ Conectado - Datos sincronizados en tiempo real';
+        containerElement.style.background = '#e8f5e8';
+        containerElement.style.color = '#2d5016';
+        containerElement.style.borderLeft = '4px solid #4caf50';
+      } else {
+        const textoError = mensaje ? ` (${mensaje})` : '';
+        statusElement.textContent = `⚠️ Sin conexión - Solo datos locales${textoError}`;
+        containerElement.style.background = '#fff3cd';
+        containerElement.style.color = '#856404';
+        containerElement.style.borderLeft = '4px solid #ffc107';
+      }
     }
     
     // === FUNCIONES DE ALMACENAMIENTO UNIVERSAL ===
     
-    // Función para guardar datos (Firebase o localStorage)
+    // Función para guardar datos (API online o localStorage)
     async function guardarDatos(clave, datos) {
-      if (isFirebaseAvailable) {
-        try {
-          await database.ref(clave).set(datos);
-          console.log(`✅ Datos guardados en Firebase: ${clave}`);
-        } catch (error) {
-          console.warn(`⚠️ Error en Firebase, usando localStorage: ${error.message}`);
-          localStorage.setItem(clave, JSON.stringify(datos));
-        }
-      } else {
+      // Siempre guardar en localStorage primero como respaldo
+      try {
         localStorage.setItem(clave, JSON.stringify(datos));
+        console.log(`💾 Datos guardados localmente: ${clave}`);
+      } catch (error) {
+        console.warn(`⚠️ Error guardando localmente: ${error.message}`);
+      }
+      
+      // Intentar sincronizar con almacenamiento online
+      if (isOnlineStorageAvailable) {
+        try {
+          // Obtener todos los datos actuales
+          const todosLosDatos = await cargarTodosLosDatosOnline() || {};
+          
+          // Actualizar con el nuevo dato
+          todosLosDatos[clave] = datos;
+          todosLosDatos[`${clave}_timestamp`] = Date.now();
+          
+          // Guardar todos los datos actualizados
+          const response = await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+              'X-Master-Key': API_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(todosLosDatos)
+          });
+          
+          if (response.ok) {
+            console.log(`☁️ Datos sincronizados online: ${clave}`);
+          } else {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+        } catch (error) {
+          console.warn(`⚠️ Error sincronizando online: ${error.message}`);
+          isOnlineStorageAvailable = false;
+          actualizarEstadoConexion(false, 'Error de sincronización');
+        }
       }
     }
     
-    // Función para cargar datos (Firebase o localStorage)
+    // Función para cargar datos específicos (online o localStorage)
     async function cargarDatos(clave, valorPorDefecto = null) {
-      if (isFirebaseAvailable) {
+      // Intentar cargar desde almacenamiento online primero
+      if (isOnlineStorageAvailable) {
         try {
-          const snapshot = await database.ref(clave).once('value');
-          const datos = snapshot.val();
-          return datos !== null ? datos : valorPorDefecto;
+          const todosLosDatos = await cargarTodosLosDatosOnline();
+          if (todosLosDatos && todosLosDatos[clave] !== undefined) {
+            console.log(`☁️ Datos cargados desde online: ${clave}`);
+            // También actualizar localStorage con los datos online
+            localStorage.setItem(clave, JSON.stringify(todosLosDatos[clave]));
+            return todosLosDatos[clave];
+          }
         } catch (error) {
-          console.warn(`⚠️ Error en Firebase, usando localStorage: ${error.message}`);
-          const datosLocal = localStorage.getItem(clave);
-          return datosLocal ? JSON.parse(datosLocal) : valorPorDefecto;
+          console.warn(`⚠️ Error cargando desde online: ${error.message}`);
+          isOnlineStorageAvailable = false;
+          actualizarEstadoConexion(false, 'Error de carga');
         }
+      }
+      
+      // Si falló online, usar localStorage
+      try {
+        const datosLocalStr = localStorage.getItem(clave);
+        if (datosLocalStr) {
+          const datosLocal = JSON.parse(datosLocalStr);
+          console.log(`💾 Datos cargados desde localStorage: ${clave}`);
+          return datosLocal;
+        }
+      } catch (error) {
+        console.warn(`⚠️ Error cargando desde localStorage: ${error.message}`);
+      }
+      
+      return valorPorDefecto;
+    }
+    
+    // Función auxiliar para cargar todos los datos desde online
+    async function cargarTodosLosDatosOnline() {
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'X-Master-Key': API_KEY,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        return result.record || {};
       } else {
-        const datosLocal = localStorage.getItem(clave);
-        return datosLocal ? JSON.parse(datosLocal) : valorPorDefecto;
+        throw new Error(`HTTP ${response.status}`);
       }
     }
     
     // Función para eliminar datos
     async function eliminarDatos(clave) {
-      if (isFirebaseAvailable) {
+      // Eliminar de localStorage
+      try {
+        localStorage.removeItem(clave);
+        console.log(`🗑️ Eliminado de localStorage: ${clave}`);
+      } catch (error) {
+        console.warn(`⚠️ Error eliminando de localStorage: ${error.message}`);
+      }
+      
+      // Eliminar de almacenamiento online
+      if (isOnlineStorageAvailable) {
         try {
-          await database.ref(clave).remove();
+          const todosLosDatos = await cargarTodosLosDatosOnline() || {};
+          delete todosLosDatos[clave];
+          delete todosLosDatos[`${clave}_timestamp`];
+          
+          const response = await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+              'X-Master-Key': API_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(todosLosDatos)
+          });
+          
+          if (response.ok) {
+            console.log(`☁️ Eliminado de online: ${clave}`);
+          }
         } catch (error) {
-          console.warn(`⚠️ Error eliminando en Firebase: ${error.message}`);
+          console.warn(`⚠️ Error eliminando de online: ${error.message}`);
         }
       }
-      localStorage.removeItem(clave);
+    }
+    
+    // Función para sincronizar datos periódicamente (cada 10 segundos)
+    function configurarSincronizacionPeriodica() {
+      setInterval(async () => {
+        if (isOnlineStorageAvailable) {
+          try {
+            // Cargar datos más recientes y actualizar interfaz si es necesario
+            const parejasOnline = await cargarDatos('parejas', []);
+            const parejasLocal = JSON.parse(localStorage.getItem('parejas') || '[]');
+            
+            // Solo actualizar la interfaz si los datos han cambiado
+            if (JSON.stringify(parejasOnline) !== JSON.stringify(parejasLocal)) {
+              console.log('🔄 Datos actualizados desde servidor, refreshing...');
+              localStorage.setItem('parejas', JSON.stringify(parejasOnline));
+              if (typeof renderTabla === 'function') {
+                renderTabla();
+              }
+            }
+            
+            // Lo mismo para auditoría
+            const auditoriaOnline = await cargarDatos('auditoria', []);
+            const auditoriaLocal = JSON.parse(localStorage.getItem('auditoria') || '[]');
+            
+            if (JSON.stringify(auditoriaOnline) !== JSON.stringify(auditoriaLocal)) {
+              console.log('🔄 Auditoría actualizada desde servidor');
+              localStorage.setItem('auditoria', JSON.stringify(auditoriaOnline));
+              if (typeof mostrarAuditoria === 'function') {
+                mostrarAuditoria();
+              }
+            }
+            
+            // Y para notas guardadas
+            const notasOnline = await cargarDatos('notasGuardadas', '');
+            const notasLocal = localStorage.getItem('notasGuardadas') || '';
+            
+            if (notasOnline !== notasLocal) {
+              console.log('🔄 Notas actualizadas desde servidor');
+              localStorage.setItem('notasGuardadas', notasOnline);
+              if (typeof mostrarNotasGuardadas === 'function') {
+                mostrarNotasGuardadas();
+              }
+            }
+            
+          } catch (error) {
+            console.warn('⚠️ Error en sincronización periódica:', error.message);
+          }
+        }
+      }, 10000); // Cada 10 segundos
     }
     
     // === SISTEMA DE USUARIO Y AUDITORÍA ===
@@ -442,6 +618,11 @@
     
     // Inicialización del sistema
     document.addEventListener('DOMContentLoaded', async function() {
+      // Configurar sincronización periódica
+      setTimeout(() => {
+        configurarSincronizacionPeriodica();
+      }, 2000); // Esperar 2 segundos para que todo se inicialice
+      
       // Verificar si hay usuario guardado
       const savedUser = await cargarDatos('currentUser');
       if (savedUser) {
