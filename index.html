@@ -482,7 +482,7 @@
         // Leer el objeto completo actual de npoint.io
         let remoteData = {};
         try {
-          const resp = await fetch(NPOINT_URL);
+          const resp = await fetch(NPOINT_URL + '?t=' + Date.now()); // evitar caché
           if (resp.ok) {
             remoteData = await resp.json();
           }
@@ -500,6 +500,10 @@
           localStorage.setItem(clave, JSON.stringify(datos));
           localStorage.setItem(`${clave}_timestamp`, Date.now().toString());
           console.log(`☁️ ✅ Datos guardados en npoint.io: ${clave}`);
+          // Forzar recarga y renderizado tras guardar
+          setTimeout(() => {
+            location.reload();
+          }, 500);
           return true;
         } else {
           throw new Error('No se pudo guardar en npoint.io');
@@ -516,7 +520,7 @@
     // Cargar datos desde npoint.io (o localStorage si falla)
     async function cargarDatos(clave, valorPorDefecto = null) {
       try {
-        const resp = await fetch(NPOINT_URL);
+        const resp = await fetch(NPOINT_URL + '?t=' + Date.now()); // evitar caché
         if (resp.ok) {
           const remoteData = await resp.json();
           if (remoteData && remoteData[clave] !== undefined) {
