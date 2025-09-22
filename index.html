@@ -268,7 +268,7 @@
       <span class="small">Puedes elegir uno o dos turnos por día.</span><br><br>
       <button class="btn" type="submit">Registrar pareja y turnos</button>
       <button class="btn btn-secondary" type="button" onclick="cargarDatosEjemplo()" style="margin-left: 10px;">📝 Cargar datos de ejemplo</button>
-      <button class="btn btn-success" type="button" onclick="simularOtroUsuario()" style="margin-left: 10px;">👥 Simular otro usuario</button>
+
     </form>
   </div>
 
@@ -496,11 +496,7 @@
           body: JSON.stringify(remoteData)
         });
         if (putResp.ok) {
-          // Guardar también en localStorage como respaldo
-          localStorage.setItem(clave, JSON.stringify(datos));
-          localStorage.setItem(`${clave}_timestamp`, Date.now().toString());
           console.log(`☁️ ✅ Datos guardados en npoint.io: ${clave}`);
-          // Forzar recarga y renderizado tras guardar
           setTimeout(() => {
             location.reload();
           }, 500);
@@ -509,10 +505,7 @@
           throw new Error('No se pudo guardar en npoint.io');
         }
       } catch (error) {
-        // Si falla, guardar solo localmente
-        localStorage.setItem(clave, JSON.stringify(datos));
-        localStorage.setItem(`${clave}_timestamp`, Date.now().toString());
-        console.warn(`⚠️ Solo guardado local por error: ${error.message}`);
+        alert('Error de red: no se pudo guardar en la nube. Intenta de nuevo.');
         return false;
       }
     }
@@ -524,22 +517,11 @@
         if (resp.ok) {
           const remoteData = await resp.json();
           if (remoteData && remoteData[clave] !== undefined) {
-            // Actualizar localStorage
-            localStorage.setItem(clave, JSON.stringify(remoteData[clave]));
             return remoteData[clave];
           }
         }
       } catch (error) {
-        console.warn(`⚠️ Error cargando de npoint.io: ${error.message}`);
-      }
-      // Si falla, cargar de localStorage
-      try {
-        const datosLocalStr = localStorage.getItem(clave);
-        if (datosLocalStr) {
-          return JSON.parse(datosLocalStr);
-        }
-      } catch (error) {
-        console.warn(`⚠️ Error cargando desde localStorage: ${error.message}`);
+        alert('Error de red: no se pudo cargar la información. Intenta de nuevo.');
       }
       return valorPorDefecto;
     }
