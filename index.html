@@ -296,19 +296,6 @@
       window.editarPareja = editarPareja;
       window.eliminarPareja = eliminarPareja;
       window.cancelarEdicion = cancelarEdicion;
-        // Guardar solo la clave deseada de forma atómica sin sobrescribir todo el objeto
-        let updateObj = {};
-        updateObj['datos/' + clave] = valor;
-        updateObj['ultimaActualizacion'] = Date.now();
-        try {
-          await update(ref(db, 'turnos'), updateObj);
-          datos[clave] = valor;
-          ultimaActualizacion = updateObj['ultimaActualizacion'];
-          mostrarEstado('Datos guardados en la nube (Firebase)', 'ok');
-        } catch (e) {
-          mostrarEstado('Error de red: no se pudo guardar en la nube (Firebase). Intenta de nuevo.', 'error');
-        }
-      }
       function cargarDatos(clave, valorPorDefecto) {
         return get(ref(db, 'turnos')).then(function(snapshot) {
           if (snapshot.exists()) {
