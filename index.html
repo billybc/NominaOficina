@@ -655,13 +655,19 @@
       }
       if (loginError) loginError.style.display = 'none';
       currentUser = userName;
+      console.log('[LOGIN] Guardando usuario en Firebase:', userName);
       await guardarDatos('currentUser', userName);
       // Registrar el login
       await registrarCambio('Login', `${userName} ingresó al sistema`);
-      // Esperar un breve momento para asegurar sincronización antes de mostrar el contenido principal
-      setTimeout(() => {
+      // Verificar que el usuario se guardó correctamente antes de continuar
+      const verificado = await cargarDatos('currentUser');
+      console.log('[LOGIN] Usuario recuperado tras guardar:', verificado);
+      if (verificado === userName) {
         mostrarContenidoPrincipal();
-      }, 300);
+      } else {
+        alert('Error: No se pudo guardar el usuario. Intenta de nuevo.');
+        mostrarPantallaLogin();
+      }
     });
     
     // Mostrar contenido principal
