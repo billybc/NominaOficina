@@ -312,19 +312,25 @@
             ultimaActualizacion = val.ultimaActualizacion || null;
             renderUltimaActualizacion();
             mostrarEstado('Datos sincronizados desde la nube (Firebase)', 'ok');
+            // Robustecer: si la clave es currentUser y no está en datos, buscar en snapshot directo
+            if (clave === 'currentUser') {
+              if (datos[clave] !== undefined) return datos[clave];
+              if (val.datos && val.datos.currentUser !== undefined) return val.datos.currentUser;
+              return valorPorDefecto;
+            }
             if (clave) return datos[clave] !== undefined ? datos[clave] : valorPorDefecto;
           } else {
             datos = {};
-          ultimaActualizacion = null;
-          renderUltimaActualizacion();
-          mostrarEstado('No hay datos en la nube (Firebase)', 'warn');
+            ultimaActualizacion = null;
+            renderUltimaActualizacion();
+            mostrarEstado('No hay datos en la nube (Firebase)', 'warn');
+            if (clave) return valorPorDefecto;
+          }
+        }).catch(function(e) {
+          mostrarEstado('Error de red: no se pudo cargar desde la nube (Firebase).', 'error');
           if (clave) return valorPorDefecto;
-        }
-      }).catch(function(e) {
-        mostrarEstado('Error de red: no se pudo cargar desde la nube (Firebase).', 'error');
-        if (clave) return valorPorDefecto;
-      });
-    }
+        });
+      }
     db.ref('turnos').on('value', function(snapshot) {
       if (snapshot.exists()) {
         var val = snapshot.val();
