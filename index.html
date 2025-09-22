@@ -270,24 +270,10 @@
       </div>
     </div>
     <div id="notificaciones"></div>
-    <!-- Cargar librerías de Firebase antes de inicializar -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script>
-      // Configuración e inicialización de Firebase
-      var firebaseConfig = {
-        apiKey: "AIzaSyAt2Y7Jn7fDQBfxhAJ5Jco70fpvTYeyQVo",
-        authDomain: "turnosoficina-17fed.firebaseapp.com",
-        projectId: "turnosoficina-17fed",
-        storageBucket: "turnosoficina-17fed.appspot.com",
-        messagingSenderId: "378553383601",
-        appId: "1:378553383601:web:242d049cd0399ad59d0090",
-        databaseURL: "https://turnosoficina-17fed-default-rtdb.firebaseio.com/"
-      };
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      const db = firebase.database();
+    <!-- Importar Firebase moderno y lógica principal como módulo -->
+    <script type="module">
+      import { db } from './firebase.js';
+      import { ref, update, get, onValue } from 'firebase/database';
       var datos = {};
       var ultimaActualizacion = null;
       async function guardarDatos(clave, valor) {
@@ -296,7 +282,7 @@
         updateObj['datos/' + clave] = valor;
         updateObj['ultimaActualizacion'] = Date.now();
         try {
-          await db.ref('turnos').update(updateObj);
+          await update(ref(db, 'turnos'), updateObj);
           datos[clave] = valor;
           ultimaActualizacion = updateObj['ultimaActualizacion'];
           mostrarEstado('Datos guardados en la nube (Firebase)', 'ok');
@@ -305,7 +291,7 @@
         }
       }
       function cargarDatos(clave, valorPorDefecto) {
-        return db.ref('turnos').once('value').then(function(snapshot) {
+        return get(ref(db, 'turnos')).then(function(snapshot) {
           if (snapshot.exists()) {
             var val = snapshot.val();
             datos = val.datos || {};
@@ -331,19 +317,20 @@
           if (clave) return valorPorDefecto;
         });
       }
-    db.ref('turnos').on('value', function(snapshot) {
-      if (snapshot.exists()) {
-        var val = snapshot.val();
-        datos = val.datos || {};
-        ultimaActualizacion = val.ultimaActualizacion || null;
-        renderUltimaActualizacion();
-        mostrarEstado('Datos sincronizados en tiempo real (Firebase)', 'ok');
-        renderTabla();
-        renderListaParejas();
-        mostrarAuditoria();
-        mostrarNotasGuardadas();
-      }
-    });
+      // Suscripción en tiempo real
+      onValue(ref(db, 'turnos'), function(snapshot) {
+        if (snapshot.exists()) {
+          var val = snapshot.val();
+          datos = val.datos || {};
+          ultimaActualizacion = val.ultimaActualizacion || null;
+          renderUltimaActualizacion();
+          mostrarEstado('Datos sincronizados en tiempo real (Firebase)', 'ok');
+          renderTabla();
+          renderListaParejas();
+          mostrarAuditoria();
+          mostrarNotasGuardadas();
+        }
+      });
     function renderUltimaActualizacion() {
       var el = document.getElementById('ultimaActualizacion');
       if (el) {
