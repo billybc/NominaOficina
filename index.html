@@ -296,6 +296,28 @@
       window.editarPareja = editarPareja;
       window.eliminarPareja = eliminarPareja;
       window.cancelarEdicion = cancelarEdicion;
+
+      // --- CORRECCIÓN DE FLUJO DE LOGIN ---
+      document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const userName = document.getElementById('userName').value.trim();
+        const loginError = document.getElementById('loginError');
+        if (userName.length < 2) {
+          loginError.textContent = 'Por favor, ingresa un nombre válido (mínimo 2 caracteres).';
+          loginError.style.display = 'block';
+          return;
+        }
+        loginError.style.display = 'none';
+        try {
+          await guardarDatos('currentUser', userName);
+          document.getElementById('loginOverlay').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          document.getElementById('currentUser').textContent = userName;
+        } catch (err) {
+          loginError.textContent = 'Error al iniciar sesión: ' + err;
+          loginError.style.display = 'block';
+        }
+      });
       function cargarDatos(clave, valorPorDefecto) {
         return get(ref(db, 'turnos')).then(function(snapshot) {
           if (snapshot.exists()) {
@@ -379,25 +401,7 @@
       renderUltimaActualizacion();
     });
   </script>
-    </button>
-  </div>
-
-  <!-- Sección de notas guardadas -->
-  <div class="form-section">
-    <h3>📄 Notas guardadas</h3>
-    <div id="notasGuardadas" style="min-height: 80px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; white-space: pre-wrap;">
-      <p class="small" style="color: #666; font-style: italic;">No hay notas guardadas aún.</p>
-    </div>
-    <div style="text-align: right; margin-bottom: 10px;">
-      <span class="small" id="ultimaModificacion" style="color: #666;"></span>
-    </div>
-  </div>
-
-  <!-- Sección de notas -->
-  <div class="form-section">
-    <h3>📝 Escribir notas y observaciones</h3>
-    <textarea 
-      id="notasTextarea" 
+    // ...existing code...
       placeholder="Escribe aquí notas, observaciones o comentarios sobre los turnos y asignaciones..."
       style="width: 100%; min-height: 120px; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-family: Arial, sans-serif; resize: vertical; box-sizing: border-box;"
     ></textarea>
