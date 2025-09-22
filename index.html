@@ -379,8 +379,9 @@
     const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${DATA_FILE}`;
     
     // Usar un servicio JSON más simple y confiable
-    const SIMPLE_API_URL = 'https://jsonplaceholder.typicode.com/posts/1'; // Para pruebas
-    const REAL_API_URL = 'https://api.npoint.io/a1b2c3d4e5f6g7h8i9j0'; // Servicio confiable
+  // URL de tu endpoint npoint.io (reemplaza por tuya si quieres privacidad)
+  const NPOINT_URL = 'https://api.npoint.io/478db2a2edbdac28068a'; // SOLO LECTURA (GET)
+  const NPOINT_EDIT_URL = 'https://api.npoint.io/478db2a2edbdac28068a'; // LECTURA Y ESCRITURA (PUT)
     
     // Configuración mejorada usando múltiples servicios de respaldo
     const BACKUP_APIS = [
@@ -474,85 +475,68 @@
     
     // Para pruebas, usar un servicio más simple
     let datosCompartidos = {}; // Cache de datos compartidos
-    
-    // Función para guardar datos (Simulación + localStorage)
+
+    // Guardar datos en npoint.io (y localStorage como respaldo)
     async function guardarDatos(clave, datos) {
-      // SIEMPRE guardar en localStorage primero (garantizado)
       try {
+        // Leer el objeto completo actual de npoint.io
+        let remoteData = {};
+        try {
+          const resp = await fetch(NPOINT_URL);
+          if (resp.ok) {
+            remoteData = await resp.json();
+          }
+        } catch (e) {}
+        // Actualizar la clave
+        remoteData[clave] = datos;
+        // Guardar en npoint.io
+        const putResp = await fetch(NPOINT_EDIT_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(remoteData)
+        });
+        if (putResp.ok) {
+          // Guardar también en localStorage como respaldo
+          localStorage.setItem(clave, JSON.stringify(datos));
+          localStorage.setItem(`${clave}_timestamp`, Date.now().toString());
+          console.log(`☁️ ✅ Datos guardados en npoint.io: ${clave}`);
+          return true;
+        } else {
+          throw new Error('No se pudo guardar en npoint.io');
+        }
+      } catch (error) {
+        // Si falla, guardar solo localmente
         localStorage.setItem(clave, JSON.stringify(datos));
         localStorage.setItem(`${clave}_timestamp`, Date.now().toString());
-        console.log(`💾 ✅ Datos guardados localmente: ${clave}`);
-      } catch (error) {
-        console.warn(`⚠️ Error guardando localmente: ${error.message}`);
+        console.warn(`⚠️ Solo guardado local por error: ${error.message}`);
         return false;
       }
-      
-      // Simular sincronización online para demo
-      if (isOnlineStorageAvailable) {
-        try {
-          // Simular guardado online con un delay realista
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Actualizar cache compartido (simula sincronización)
-          datosCompartidos[clave] = datos;
-          datosCompartidos[`${clave}_timestamp`] = Date.now();
-          
-          console.log(`☁️ ✅ Datos sincronizados (simulado): ${clave}`);
-          
-          // Intentar usar un servicio real para persistencia
-          try {
-            await fetch('https://httpbin.org/put', {
-              method: 'PUT',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                key: clave,
-                data: datos,
-                timestamp: Date.now()
-              })
-            });
-            console.log(`🌐 Datos enviados a servidor de respaldo`);
-          } catch (e) {
-            // No es crítico si falla el respaldo
-          }
-          
-          return true;
-        } catch (error) {
-          console.warn(`⚠️ Error en sincronización online: ${error.message}`);
-        }
-      }
-      
-      return true; // Siempre exitoso si se guardó localmente
     }
-    
-    // Función para cargar datos (localStorage + cache compartido)
+
+    // Cargar datos desde npoint.io (o localStorage si falla)
     async function cargarDatos(clave, valorPorDefecto = null) {
-      // Verificar cache compartido primero (simula datos de otros usuarios)
-      if (isOnlineStorageAvailable && datosCompartidos[clave] !== undefined) {
-        console.log(`🌐 Datos cargados desde cache compartido: ${clave}`);
-        // También actualizar localStorage con datos compartidos
-        localStorage.setItem(clave, JSON.stringify(datosCompartidos[clave]));
-        return datosCompartidos[clave];
+      try {
+        const resp = await fetch(NPOINT_URL);
+        if (resp.ok) {
+          const remoteData = await resp.json();
+          if (remoteData && remoteData[clave] !== undefined) {
+            // Actualizar localStorage
+            localStorage.setItem(clave, JSON.stringify(remoteData[clave]));
+            return remoteData[clave];
+          }
+        }
+      } catch (error) {
+        console.warn(`⚠️ Error cargando de npoint.io: ${error.message}`);
       }
-      
-      // Cargar desde localStorage
+      // Si falla, cargar de localStorage
       try {
         const datosLocalStr = localStorage.getItem(clave);
         if (datosLocalStr) {
-          const datosLocal = JSON.parse(datosLocalStr);
-          console.log(`💾 Datos cargados desde localStorage: ${clave}`);
-          
-          // Si hay conexión, también actualizar el cache compartido
-          if (isOnlineStorageAvailable) {
-            datosCompartidos[clave] = datosLocal;
-          }
-          
-          return datosLocal;
+          return JSON.parse(datosLocalStr);
         }
       } catch (error) {
         console.warn(`⚠️ Error cargando desde localStorage: ${error.message}`);
       }
-      
-      console.log(`📝 Usando valor por defecto para: ${clave}`);
       return valorPorDefecto;
     }
     
@@ -751,18 +735,18 @@
     });
     
     // Mostrar contenido principal
-    function mostrarContenidoPrincipal() {
+    async function mostrarContenidoPrincipal() {
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
       document.getElementById('currentUser').textContent = currentUser;
       
       // Inicializar la aplicación
       renderFormDias();
-      renderTabla();
-      renderListaParejas();
-      mostrarAuditoria();
-      cargarNotas();
-      mostrarNotasGuardadas();
+      await renderTabla();
+      await renderListaParejas();
+      await mostrarAuditoria();
+      await cargarNotas();
+      await mostrarNotasGuardadas();
     }
     
     // Mostrar pantalla de login
@@ -1036,14 +1020,14 @@
       
       f.reset();
       renderFormDias();
-      renderTabla();
-      renderListaParejas();
+      await renderTabla();
+      await renderListaParejas();
       alert('¡Pareja registrada!');
     };
 
     // Mostrar lista de parejas registradas
-    function renderListaParejas() {
-      const parejas = cargarParejas();
+    async function renderListaParejas() {
+      const parejas = await cargarParejas();
       const container = document.getElementById('listaParejasRegistradas');
       
       if (parejas.length === 0) {
@@ -1115,25 +1099,25 @@
     }
 
     // Función para eliminar pareja
-    function eliminarPareja(index) {
-      const parejas = cargarParejas();
+    async function eliminarPareja(index) {
+      const parejas = await cargarParejas();
       const pareja = parejas[index];
       
       if (confirm(`¿Estás seguro de eliminar la pareja "${pareja.nombre1} & ${pareja.nombre2}"?`)) {
         parejas.splice(index, 1);
-        guardarParejas(parejas);
+        await guardarParejas(parejas);
         
         // Registrar la acción
-        registrarCambio('Pareja Eliminada', `Se eliminó la pareja "${pareja.nombre1} & ${pareja.nombre2}"`);
+        await registrarCambio('Pareja Eliminada', `Se eliminó la pareja "${pareja.nombre1} & ${pareja.nombre2}"`);
         
-        renderListaParejas();
-        renderTabla();
+        await renderListaParejas();
+        await renderTabla();
         alert('Pareja eliminada exitosamente.');
       }
     }
 
     // Manejar actualización de pareja
-    document.getElementById('updateForm').onsubmit = function(e) {
+    document.getElementById('updateForm').onsubmit = async function(e) {
       e.preventDefault();
       const f = e.target;
       const index = parseInt(document.getElementById('editIndex').value);
@@ -1155,38 +1139,46 @@
         turnosPorDia.push(checks);
       }
       
-      let parejas = cargarParejas();
+      let parejas = await cargarParejas();
       const parejaAnterior = parejas[index];
       parejas[index] = { nombre1, nombre2, turnosPorDia };
-      guardarParejas(parejas);
+      await guardarParejas(parejas);
       
       // Registrar la acción
-      registrarCambio('Pareja Editada', `Se modificó "${parejaAnterior.nombre1} & ${parejaAnterior.nombre2}" → "${nombre1} & ${nombre2}"`);
+      await registrarCambio('Pareja Editada', `Se modificó "${parejaAnterior.nombre1} & ${parejaAnterior.nombre2}" → "${nombre1} & ${nombre2}"`);
       
       cancelarEdicion();
-      renderListaParejas();
-      renderTabla();
+      await renderListaParejas();
+      await renderTabla();
       alert('¡Pareja actualizada exitosamente!');
     };
 
     // Generar tabla de asignaciones con distribución automática
-    function renderTabla() {
-      const parejas = cargarParejas();
-      if (parejas.length === 0) { 
-        document.getElementById('tablaAsignaciones').innerHTML = "Aún no hay registros."; 
-        return; 
-      }
-      
-      // Generar asignaciones automáticas
-      const asignaciones = generarAsignacionesAutomaticas(parejas);
-      
+    async function renderTabla() {
+      const parejas = await cargarParejas();
       let html = `<table><thead><tr>
         <th>Día</th>
         <th>Turno</th>
         <th>Pareja</th>
         <th>Tareas asignadas</th>
       </tr></thead><tbody>`;
-      
+      if (parejas.length === 0) {
+        for (let dia = 0; dia < DIAS.length; dia++) {
+          for (let t = 0; t < TURNOS.length; t++) {
+            html += `<tr>
+              <td>${DIAS[dia]}</td>
+              <td>${TURNOS[t].hora}</td>
+              <td colspan="2" style="color:#dc3545; font-weight:bold;">No hay parejas registradas</td>
+            </tr>`;
+          }
+        }
+        html += "</tbody></table>";
+        document.getElementById('tablaAsignaciones').innerHTML = html + '<div style="color:#dc3545; font-weight:bold; text-align:center; margin-top:10px;">Registra al menos una pareja para ver las asignaciones.</div>';
+        document.getElementById('estadisticasDistribucion').innerHTML = '';
+        return;
+      }
+      // Generar asignaciones automáticas
+      const asignaciones = generarAsignacionesAutomaticas(parejas);
       for (let dia = 0; dia < DIAS.length; dia++) {
         for (let t = 0; t < TURNOS.length; t++) {
           const pareja = asignaciones[dia][t];
@@ -1200,7 +1192,6 @@
       }
       html += "</tbody></table>";
       document.getElementById('tablaAsignaciones').innerHTML = html;
-      
       // Mostrar estadísticas de distribución
       mostrarEstadisticas(asignaciones, parejas);
     }
@@ -1525,7 +1516,7 @@
     }
 
     // Función para cargar datos de ejemplo
-    function cargarDatosEjemplo() {
+    async function cargarDatosEjemplo() {
       if (confirm('¿Deseas cargar datos de ejemplo? Esto agregará parejas de prueba.')) {
         const parejasEjemplo = [
           {
@@ -1572,24 +1563,35 @@
           }
         ];
         
-        const parejasActuales = cargarParejas();
+        const parejasActuales = await cargarParejas();
         const parejasNuevas = [...parejasActuales, ...parejasEjemplo];
-        guardarParejas(parejasNuevas);
+        await guardarParejas(parejasNuevas);
         
         // Registrar la acción
-        registrarCambio('Datos de Ejemplo', 'Se cargaron datos de ejemplo (Billy&Chex, Humber&Casimiro, Josh&Axel)');
+        await registrarCambio('Datos de Ejemplo', 'Se cargaron datos de ejemplo (Billy&Chex, Humber&Casimiro, Josh&Axel)');
         
-        renderListaParejas();
-        renderTabla();
+        await renderListaParejas();
+        await renderTabla();
         alert('¡Datos de ejemplo cargados! Billy&Chex, Humber&Casimiro y Josh&Axel están listos para el patrón consecutivo con 2 turnos.');
       }
     }
-    renderTabla();
-    renderListaParejas();
+    
+    // Inicialización asíncrona
+    async function inicializarPagina() {
+      await renderTabla();
+      await renderListaParejas();
+    }
+    
+    // Ejecutar inicialización cuando la página esté lista
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', inicializarPagina);
+    } else {
+      inicializarPagina();
+    }
 
     // Descargar CSV
-    function descargarCSV() {
-      const parejas = cargarParejas();
+    async function descargarCSV() {
+      const parejas = await cargarParejas();
       let filas = [["Día", "Turno", "Pareja", "Tareas asignadas"]];
       for (let dia = 0; dia < DIAS.length; dia++) {
         for (let t = 0; t < TURNOS.length; t++) {
