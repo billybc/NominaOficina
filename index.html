@@ -658,7 +658,10 @@
       await guardarDatos('currentUser', userName);
       // Registrar el login
       await registrarCambio('Login', `${userName} ingresó al sistema`);
-      mostrarContenidoPrincipal();
+      // Esperar un breve momento para asegurar sincronización antes de mostrar el contenido principal
+      setTimeout(() => {
+        mostrarContenidoPrincipal();
+      }, 300);
     });
     
     // Mostrar contenido principal
