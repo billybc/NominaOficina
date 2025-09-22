@@ -4,44 +4,266 @@
   <meta charset="UTF-8">
   <title>Asignación de Turnos y Tareas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; }
-    h1, h2 { color: #2d71a1; }
-    h3 { color: #1a456b; margin-bottom: 15px; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
-    th, td { border: 1px solid #ccc; text-align: center; padding: 6px 4px; }
-    th { background: #2d71a1; color: white; }
-    .form-section { background: #f7fafc; padding: 18px; margin-bottom: 32px; border-radius: 7px; box-shadow: 0 1px 4px #ccc5; }
-    .btn { background: #2d71a1; color: white; border: none; padding: 6px 15px; border-radius: 3px; cursor: pointer; margin: 2px;}
-    .btn:hover { background: #1a456b; }
-    .btn-success { background: #28a745; }
-    .btn-success:hover { background: #218838; }
-    .btn-danger { background: #dc3545; }
-    .btn-danger:hover { background: #c82333; }
-    .btn-secondary { background: #666; }
-    .btn-secondary:hover { background: #555; }
-    .small { font-size: 0.91em; color: #666; }
-    .edit-form { background: #fff8e1; border-left: 4px solid #ffc107; }
-    .text-success { color: #28a745; font-weight: bold; }
-    .text-danger { color: #dc3545; font-weight: bold; }
-    .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(45, 113, 161, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%; }
-    .login-card h2 { color: #2d71a1; margin-bottom: 20px; }
-    .login-input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; }
-    .login-input:focus { border-color: #2d71a1; outline: none; }
-    .user-info { background: #e8f4f8; padding: 10px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #2d71a1; }
-    .audit-section { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd; }
-    .audit-entry { background: #fff; border-left: 4px solid #2196f3; padding: 8px; margin-bottom: 8px; border-radius: 3px; font-size: 0.97em; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border-bottom: 1px solid #e0e0e0;
+      padding-top: 24px;
+      padding-bottom: 8px;
+      margin-bottom: 32px;
+    }
+    h1, h2, h3 {
+      font-family: inherit;
+      font-weight: bold;
+      color: #2d71a1;
+      margin-top: 0;
+    }
+    h2 {
+      color: #1a456b;
+      font-size: 1.3em;
+    }
+    h3 {
+      color: #2d71a1;
+      font-size: 1.1em;
+    }
+    .form-section {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 20px 18px 18px 18px;
+      margin-bottom: 32px;
+      border: 1px solid #e0e0e0;
+    }
+    .user-info {
+      background: #e3f2fd;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 1.08em;
+      margin-bottom: 24px;
+      border-left: 4px solid #2196f3;
+      color: #1a456b;
+    }
+    .small {
+      font-size: 0.97em;
+      color: #555;
+    }
+    .btn {
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin: 2px 2px 2px 0;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .btn:hover {
+      background: #1976d2;
+    }
+    .btn-success {
+      background: #4caf50;
+    }
+    .btn-success:hover {
+      background: #388e3c;
+    }
+    .btn-danger {
+      background: #dc3545;
+    }
+    .btn-danger:hover {
+      background: #b71c1c;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #495057;
+    }
+    .login-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(44,62,80,0.13);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+      padding: 32px 28px 24px 28px;
+      min-width: 320px;
+      max-width: 95vw;
+      text-align: center;
+    }
+    .login-input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1.5px solid #b0bec5;
+      border-radius: 5px;
+      font-size: 1.1em;
+      font-family: inherit;
+      background: #f9f9f9;
+      box-sizing: border-box;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .login-input:focus {
+      border: 1.5px solid #2196f3;
+      background: #fff;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fafbfc;
+      margin-bottom: 10px;
+    }
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 7px 8px;
+      text-align: left;
+      font-size: 1em;
+    }
+    th {
+      background: #e3f2fd;
+      color: #1a456b;
+      font-weight: bold;
+    }
+    tr:nth-child(even) td {
+      background: #f5faff;
+    }
+    .table-container {
+      overflow-x: auto;
+      width: 100%;
+    }
+    .audit-section .audit-entry {
+      background: #f9f9f9;
+      border-left: 4px solid #2196f3;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.98em;
+    }
+    .audit-timestamp {
+      color: #888;
+      font-size: 0.93em;
+    }
+    @media (max-width: 700px) {
+      .form-section, .login-card {
+        padding: 10px 4vw;
+      }
+      table, th, td {
+        font-size: 0.97em;
+      }
+      h1 {
+        font-size: 1.3em;
+      }
+      h2 {
+        font-size: 1.1em;
+      }
+    }
   </style>
-  <!-- Firebase App (core) SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <!-- Firebase Realtime Database SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-  <script>
-    // --- Configuración de Firebase ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyAt2Y7Jn7fDQBfxhAJ5Jco70fpvTYeyQVo",
+  <body>
+    <header style="text-align:center; margin-bottom:32px;">
+      <h1 style="font-size:2.2em; color:#2d71a1; margin-bottom:0;">Sistema de Asignación de Turnos y Tareas</h1>
+      <div style="font-size:1.1em; color:#1a456b; margin-bottom:8px;">Oficina &mdash; <b>Sincronización en tiempo real con Firebase</b></div>
+      <div class="small" style="color:#444; margin-bottom:10px; max-width:700px; margin:auto;">
+        <b>¿Cómo funciona?</b> Todos los cambios se guardan y sincronizan automáticamente en la nube usando <b>Firebase</b>. Si editas, agregas o eliminas información, <u>todos los dispositivos conectados verán los cambios al instante</u>.<br>
+        <span style="color:#1a456b;">No necesitas guardar manualmente ni preocuparte por perder datos.</span>
+      </div>
+      <div id="ultimaActualizacion" class="small" style="margin-bottom:8px;"></div>
+      <div id="connectionStatus" style="display:inline-block; padding:6px 18px; border-radius:5px; margin-bottom:8px; font-size:1em; font-weight:bold; background:#e8f5e8; color:#2d5016; border-left:4px solid #4caf50;">
+  <span id="statusText">Conectado y sincronizando</span>
+  <button id="btnRecargarDatos" class="btn btn-secondary" style="margin-left:12px; font-size:0.95em;">🔄 Forzar recarga y sincronización</button>
+      </div>
+    </header>
+    <main id="mainContent" style="max-width:900px; margin:auto; display:none;">
+      <section class="user-info" style="margin-bottom:24px;">
+        <span>👤 Usuario actual: <b id="currentUser"></b></span>
+        <button class="btn btn-secondary" onclick="cambiarUsuario()" style="margin-left:10px;">Cambiar usuario</button>
+      </section>
+      <section class="form-section" style="margin-bottom:32px;">
+        <h2 style="margin-bottom:18px;">Registrar nueva pareja y turnos</h2>
+        <div class="small" style="color:#444; margin-bottom:10px;">El registro y los turnos se sincronizan automáticamente en la nube. Si otro usuario agrega o edita una pareja, lo verás reflejado aquí al instante.</div>
+        <form id="registerForm" autocomplete="off">
+          <div style="display:flex; gap:12px; margin-bottom:10px;">
+            <input type="text" name="nombre1" placeholder="Nombre 1" class="login-input" style="max-width:180px;">
+            <input type="text" name="nombre2" placeholder="Nombre 2" class="login-input" style="max-width:180px;">
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="margin-bottom:10px;">
+              <thead><tr><th>Día</th><th>08:00-16:00</th><th>16:00-00:00</th></tr></thead>
+              <tbody id="diasTurnos"></tbody>
+            </table>
+          </div>
+          <button class="btn btn-success" type="submit">Registrar pareja</button>
+        </form>
+      </section>
+      <section class="form-section" style="margin-bottom:32px;">
+        <h2 style="margin-bottom:18px;">Parejas registradas</h2>
+        <div class="small" style="color:#444; margin-bottom:10px;">Esta lista se actualiza en tiempo real para todos los usuarios conectados.</div>
+        <div id="listaParejasRegistradas"></div>
+      </section>
+      <section class="form-section" style="margin-bottom:32px;">
+        <h2 style="margin-bottom:18px;">Tabla de asignaciones</h2>
+        <div class="small" style="color:#444; margin-bottom:10px;">Las asignaciones y estadísticas se recalculan y sincronizan automáticamente. Si hay cambios, todos los usuarios lo verán reflejado.</div>
+        <div id="tablaAsignaciones"></div>
+        <div id="estadisticasDistribucion"></div>
+        <button class="btn" onclick="descargarCSV()" style="margin-top:10px;">⬇️ Descargar CSV</button>
+      </section>
+      <section class="form-section" style="margin-bottom:32px;">
+        <h2 style="margin-bottom:18px;">Notas y observaciones</h2>
+        <div class="small" style="color:#444; margin-bottom:10px;">Las notas se guardan y sincronizan en la nube. Todos los usuarios pueden ver y editar las observaciones en tiempo real.</div>
+        <div id="notasGuardadas" style="min-height: 80px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+        <div style="text-align: right; margin-bottom: 10px;">
+          <span class="small" id="ultimaModificacion" style="color: #666;"></span>
+        </div>
+        <textarea id="notasTextarea" placeholder="Escribe aquí notas, observaciones o comentarios sobre los turnos y asignaciones..." style="width: 100%; min-height: 120px; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-family: Arial, sans-serif; resize: vertical; box-sizing: border-box;"></textarea>
+        <br>
+        <button class="btn btn-success" onclick="guardarNotas()" style="margin-top: 10px; margin-right: 5px;">💾 Guardar notas</button>
+        <button class="btn btn-secondary" onclick="limpiarNotasGuardadas()" style="margin-top: 10px; margin-right: 5px;">🗑️ Limpiar notas guardadas</button>
+        <button class="btn" onclick="limpiarTextarea()" style="margin-top: 10px; background: #6c757d;">📄 Limpiar editor</button>
+        <span class="small" style="margin-top: 5px; display: block;">Las notas se guardan en el campo de arriba y quedan registradas en la auditoría.</span>
+      </section>
+      <section class="form-section audit-section" style="margin-bottom:32px;">
+        <h2 style="margin-bottom:18px;">Auditoría de cambios recientes</h2>
+        <div class="small" style="color:#444; margin-bottom:10px;">Cada acción queda registrada y visible para todos los usuarios. La auditoría también se sincroniza en tiempo real.</div>
+        <div id="auditLog"></div>
+        <button class="btn btn-danger" onclick="limpiarAuditoria()" style="margin-top:10px;">🗑️ Limpiar auditoría</button>
+      </section>
+      <section class="form-section" style="margin-bottom:32px;">
+        <h2 style="margin-bottom:18px;">Opciones avanzadas</h2>
+        <div class="small" style="color:#444; margin-bottom:10px;">Estas acciones afectan a todos los usuarios conectados. Úsalas con precaución.</div>
+        <button class="btn" onclick="cargarDatosEjemplo()">📋 Cargar datos de ejemplo</button>
+        <button class="btn" onclick="simularOtroUsuario()">🎭 Simular otro usuario</button>
+        <button class="btn" onclick="generarPatronOrganizado()">🔄 Patrón Consecutivo</button>
+        <button class="btn" onclick="restaurarAlgoritmoOriginal()">♻️ Algoritmo Original</button>
+        <button class="btn" onclick="redistribuirTurnos()">🔀 Redistribuir turnos</button>
+      </section>
+    </main>
+    <!-- Login overlay -->
+    <div id="loginOverlay" class="login-overlay" style="display:flex;">
+      <div class="login-card">
+        <h2>Iniciar sesión</h2>
+        <form id="loginForm" autocomplete="off">
+          <input id="userName" class="login-input" type="text" placeholder="Tu nombre" maxlength="32" autofocus required>
+          <button class="btn btn-success" type="submit" style="width:100%; margin-top:10px;">Entrar</button>
+        </form>
+      </div>
+    </div>
+    <div id="notificaciones"></div
       authDomain: "turnosoficina-17fed.firebaseapp.com",
       projectId: "turnosoficina-17fed",
       storageBucket: "turnosoficina-17fed.firebasestorage.app",
@@ -370,11 +592,14 @@
     
     // Inicialización del sistema
     document.addEventListener('DOMContentLoaded', async function() {
+      // Renderizar formulario de días/turnos al cargar
+      renderFormDias();
       // Configurar sincronización periódica
       setTimeout(() => {
-        configurarSincronizacionPeriodica();
+        if (typeof configurarSincronizacionPeriodica === 'function') {
+          configurarSincronizacionPeriodica();
+        }
       }, 2000); // Esperar 2 segundos para que todo se inicialice
-      
       // Verificar si hay usuario guardado
       const savedUser = await cargarDatos('currentUser');
       if (savedUser) {
@@ -409,7 +634,6 @@
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
       document.getElementById('currentUser').textContent = currentUser;
-      
       // Inicializar la aplicación
       renderFormDias();
       await renderTabla();
@@ -417,6 +641,11 @@
       await mostrarAuditoria();
       await cargarNotas();
       await mostrarNotasGuardadas();
+      // Asegurar que el formulario de registro esté visible y funcional
+      const registerForm = document.getElementById('registerForm');
+      if (registerForm) registerForm.style.display = 'block';
+      const diasTurnos = document.getElementById('diasTurnos');
+      if (diasTurnos && diasTurnos.children.length === 0) renderFormDias();
     }
     
     // Mostrar pantalla de login
