@@ -965,14 +965,17 @@
     };
     // Descargar PDF usando jsPDF y html2canvas
     function descargarPDF() {
-      if (typeof jsPDF === 'undefined' || typeof html2canvas === 'undefined') {
+      // Usar correctamente jsPDF y html2canvas desde el namespace global UMD
+      var jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+      var html2canvasLib = window.html2canvas;
+      if (typeof jsPDFLib === 'undefined' || typeof html2canvasLib === 'undefined') {
         alert('Se requiere jsPDF y html2canvas. Por favor, agrega las librerías.');
         return;
       }
       const tabla = document.getElementById('tablaAsignaciones');
-      html2canvas(tabla).then(canvas => {
+      html2canvasLib(tabla).then(canvas => {
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdf = new jsPDFLib('p', 'mm', 'a4');
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const imgProps = pdf.getImageProperties(imgData);
