@@ -653,17 +653,52 @@
       }
       if (loginError) loginError.style.display = 'none';
       currentUser = userName;
-      console.log('[LOGIN] Guardando usuario en Firebase:', userName);
-      await guardarDatos('currentUser', userName);
+      try {
+        console.log('[LOGIN] Guardando usuario en Firebase:', userName);
+        await guardarDatos('currentUser', userName);
+      } catch (err) {
+        console.error('[LOGIN] Error al guardar usuario en Firebase:', err);
+        if (loginError) {
+          loginError.textContent = 'Error al guardar usuario en Firebase: ' + err;
+          loginError.style.display = 'block';
+        }
+        alert('Error al guardar usuario en Firebase: ' + err);
+        return;
+      }
       // Registrar el login
-      await registrarCambio('Login', `${userName} ingresó al sistema`);
+      try {
+        await registrarCambio('Login', `${userName} ingresó al sistema`);
+      } catch (err) {
+        console.error('[LOGIN] Error al registrar cambio de login:', err);
+        if (loginError) {
+          loginError.textContent = 'Error al registrar login: ' + err;
+          loginError.style.display = 'block';
+        }
+        alert('Error al registrar login: ' + err);
+        return;
+      }
       // Verificar que el usuario se guardó correctamente antes de continuar
-      const verificado = await cargarDatos('currentUser');
-      console.log('[LOGIN] Usuario recuperado tras guardar:', verificado);
+      let verificado;
+      try {
+        verificado = await cargarDatos('currentUser');
+        console.log('[LOGIN] Usuario recuperado tras guardar:', verificado);
+      } catch (err) {
+        console.error('[LOGIN] Error al recuperar usuario tras guardar:', err);
+        if (loginError) {
+          loginError.textContent = 'Error al recuperar usuario tras guardar: ' + err;
+          loginError.style.display = 'block';
+        }
+        alert('Error al recuperar usuario tras guardar: ' + err);
+        return;
+      }
       if (verificado === userName) {
         mostrarContenidoPrincipal();
       } else {
-        alert('Error: No se pudo guardar el usuario. Intenta de nuevo.');
+        if (loginError) {
+          loginError.textContent = 'Error: No se pudo guardar el usuario. Valor recuperado: ' + verificado;
+          loginError.style.display = 'block';
+        }
+        alert('Error: No se pudo guardar el usuario. Valor recuperado: ' + verificado);
         mostrarPantallaLogin();
       }
     });
