@@ -276,7 +276,26 @@
       import { ref, update, get, onValue } from 'firebase/database';
       var datos = {};
       var ultimaActualizacion = null;
-      async function guardarDatos(clave, valor) {
+
+      // ...todas tus funciones aquí...
+
+      // Al final del módulo, exponer funciones globales usadas en HTML
+      window.guardarDatos = guardarDatos;
+      window.guardarNotas = guardarNotas;
+      window.limpiarNotasGuardadas = limpiarNotasGuardadas;
+      window.limpiarTextarea = limpiarTextarea;
+      window.cambiarUsuario = cambiarUsuario;
+      window.cargarDatosEjemplo = cargarDatosEjemplo;
+      window.simularOtroUsuario = simularOtroUsuario;
+      window.generarPatronOrganizado = generarPatronOrganizado;
+      window.restaurarAlgoritmoOriginal = restaurarAlgoritmoOriginal;
+      window.redistribuirTurnos = redistribuirTurnos;
+      window.limpiarAuditoria = limpiarAuditoria;
+      window.descargarCSV = descargarCSV;
+      window.descargarPDF = descargarPDF;
+      window.editarPareja = editarPareja;
+      window.eliminarPareja = eliminarPareja;
+      window.cancelarEdicion = cancelarEdicion;
         // Guardar solo la clave deseada de forma atómica sin sobrescribir todo el objeto
         let updateObj = {};
         updateObj['datos/' + clave] = valor;
@@ -411,374 +430,10 @@
     </span>
   </div>
 
-  <script>
-    // Mostrar la hora de la última actualización
-    function mostrarUltimaActualizacion() {
-      const el = document.getElementById('ultimaActualizacion');
-      const ts = window.localStorage.getItem('ultimaActualizacionDatos');
-      if (el) {
-        if (ts) {
-          const fecha = new Date(parseInt(ts, 10));
-          el.textContent = 'Última actualización: ' + fecha.toLocaleString('es-ES');
-        } else {
-          el.textContent = '';
-        }
-      }
-    }
-
-    // Forzar recarga manual
-    document.addEventListener('DOMContentLoaded', function() {
-      const btn = document.getElementById('btnRecargarDatos');
-      if (btn) {
-        btn.onclick = function() {
-          window.localStorage.removeItem('ultimaActualizacionDatos');
-          location.reload();
-        };
-      }
-      mostrarUltimaActualizacion();
-    });
-    // === CONFIGURACIÓN DE ALMACENAMIENTO COMPARTIDO ===
-    
-    // Usando GitHub como base de datos (siempre funciona y es gratuito)
-    const GITHUB_USERNAME = 'billybc';
-    const GITHUB_REPO = 'NominaOficina';
-    const GITHUB_TOKEN = 'ghp_demo_token_placeholder'; // No necesario para lectura pública
-    const DATA_FILE = 'oficina-data.json';
-    
-    let isOnlineStorageAvailable = false;
-    
-    // URLs de GitHub API
-    const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE}`;
-    const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${DATA_FILE}`;
-    
-    // Usar un servicio JSON más simple y confiable
-  // URL de tu endpoint npoint.io (reemplaza por tuya si quieres privacidad)
-  const NPOINT_URL = 'https://api.npoint.io/e5dee7f5f2afe4344e47'; // SOLO LECTURA (GET)
-  const NPOINT_EDIT_URL = 'https://api.npoint.io/e5dee7f5f2afe4344e47'; // LECTURA Y ESCRITURA (PUT)
-    
-    // Configuración mejorada usando múltiples servicios de respaldo
-    const BACKUP_APIS = [
-      'https://httpbin.org/put', // Servicio de prueba HTTP
-      'https://postman-echo.com/put', // API de Postman
-      'https://reqres.in/api/data' // API de prueba confiable
-    ];
-    
-    // Probar conexión con múltiples servicios
-    async function testOnlineConnection() {
-      console.log('🔍 Probando conexión con servicios online...');
-      
-      // Probar con httpbin.org (muy confiable)
-      try {
-        const response = await fetch('https://httpbin.org/get', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          isOnlineStorageAvailable = true;
-          console.log('✅ Conectado a httpbin.org - Almacenamiento online disponible');
-          actualizarEstadoConexion(true);
-          return true;
-        }
-      } catch (error) {
-        console.log('❌ httpbin.org falló:', error.message);
-      }
-      
-      // Probar con postman-echo.com
-      try {
-        const response = await fetch('https://postman-echo.com/get', {
-          method: 'GET'
-        });
-        
-        if (response.ok) {
-          isOnlineStorageAvailable = true;
-          console.log('✅ Conectado a postman-echo.com - Almacenamiento online disponible');
-          actualizarEstadoConexion(true);
-          return true;
-        }
-      } catch (error) {
-        console.log('❌ postman-echo.com falló:', error.message);
-      }
-      
-      // Si todo falla, usar modo offline
-      console.warn('⚠️ Todos los servicios fallaron - Modo offline únicamente');
-      isOnlineStorageAvailable = false;
-      actualizarEstadoConexion(false, 'Servicios no disponibles');
-      return false;
-    }
-    
-    // Inicializar sistema de almacenamiento
-    setTimeout(async () => {
-      await testOnlineConnection();
-      
-      // Configurar verificación periódica cada 30 segundos
-      setInterval(async () => {
-        await testOnlineConnection();
-      }, 30000);
-    }, 1000);
-    
-    // Función para actualizar el indicador de estado de conexión
-    function actualizarEstadoConexion(conectado, mensaje = '') {
-      const statusElement = document.getElementById('statusText');
-      const containerElement = document.getElementById('connectionStatus');
-      
-      if (!statusElement || !containerElement) return;
-      
-      if (conectado) {
-        statusElement.textContent = '✅ Conectado - Datos sincronizados en tiempo real';
-        containerElement.style.background = '#e8f5e8';
-        containerElement.style.color = '#2d5016';
-        containerElement.style.borderLeft = '4px solid #4caf50';
-      } else {
-        const textoError = mensaje ? ` (${mensaje})` : '';
-        statusElement.textContent = `⚠️ Sin conexión - Solo datos locales${textoError}`;
-        containerElement.style.background = '#fff3cd';
-        containerElement.style.color = '#856404';
-        containerElement.style.borderLeft = '4px solid #ffc107';
-      }
-    }
-    
-    // === FUNCIONES DE ALMACENAMIENTO SIMPLIFICADO ===
-    
-    // Sistema simplificado usando GitHub Gist como almacenamiento compartido
-    const GIST_URL = 'https://api.github.com/gists/40c8f69e8e37c8b1a5c0a9e2b6f8d4c3';
-    const GIST_RAW_URL = 'https://gist.githubusercontent.com/billybc/40c8f69e8e37c8b1a5c0a9e2b6f8d4c3/raw/oficina-data.json';
-    
-    // Eliminadas funciones y variables de npoint.io. Toda la lógica de almacenamiento y sincronización ahora usa Firebase.
-    
-    // Eliminada la lógica de sincronización local y simulación. Toda la sincronización es ahora en tiempo real vía Firebase.
-    
-    // Función para mostrar notificaciones al usuario
-    function mostrarNotificacion(mensaje, tipo = 'info') {
-      // Crear o actualizar área de notificaciones
-      let notifArea = document.getElementById('notificaciones');
-      if (!notifArea) {
-        notifArea = document.createElement('div');
-        notifArea.id = 'notificaciones';
-        notifArea.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 1001;
-          max-width: 300px;
-        `;
-        document.body.appendChild(notifArea);
-      }
-      
-      const notif = document.createElement('div');
-      notif.style.cssText = `
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        padding: 12px;
-        margin-bottom: 10px;
-        border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        font-size: 14px;
-        animation: slideIn 0.3s ease-out;
-      `;
-      
-      notif.textContent = mensaje;
-      notifArea.appendChild(notif);
-      
-      // Auto-eliminar después de 4 segundos
-      setTimeout(() => {
-        if (notif.parentNode) {
-          notif.remove();
-        }
-      }, 4000);
-    }
-    
-    // Agregar CSS para animación
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // === SISTEMA DE USUARIO Y AUDITORÍA ===
-    
-    let currentUser = null;
-    
-    // Inicialización del sistema
-    document.addEventListener('DOMContentLoaded', async function() {
-      // Renderizar formulario de días/turnos al cargar
-      renderFormDias();
-      // Configurar sincronización periódica
-      setTimeout(() => {
-        if (typeof configurarSincronizacionPeriodica === 'function') {
-          configurarSincronizacionPeriodica();
-        }
-      }, 2000); // Esperar 2 segundos para que todo se inicialice
-      // Verificar si hay usuario guardado
-      const savedUser = await cargarDatos('currentUser');
-      if (savedUser) {
-        currentUser = savedUser;
-        mostrarContenidoPrincipal();
-      } else {
-        mostrarPantallaLogin();
-      }
-    });
-    
-    // Manejar el login
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const userName = document.getElementById('userName').value.trim();
-      const loginError = document.getElementById('loginError');
-      if (userName.length < 2) {
-        if (loginError) {
-          loginError.textContent = 'Por favor, ingresa un nombre válido (mínimo 2 caracteres).';
-          loginError.style.display = 'block';
-        } else {
-          alert('Por favor, ingresa un nombre válido (mínimo 2 caracteres).');
-        }
-        return;
-      }
-      if (loginError) loginError.style.display = 'none';
-      currentUser = userName;
-      try {
-        console.log('[LOGIN] Guardando usuario en Firebase:', userName);
-        await guardarDatos('currentUser', userName);
-      } catch (err) {
-        console.error('[LOGIN] Error al guardar usuario en Firebase:', err);
-        if (loginError) {
-          loginError.textContent = 'Error al guardar usuario en Firebase: ' + err;
-          loginError.style.display = 'block';
-        }
-        alert('Error al guardar usuario en Firebase: ' + err);
-        return;
-      }
-      // Registrar el login
-      try {
-        await registrarCambio('Login', `${userName} ingresó al sistema`);
-      } catch (err) {
-        console.error('[LOGIN] Error al registrar cambio de login:', err);
-        if (loginError) {
-          loginError.textContent = 'Error al registrar login: ' + err;
-          loginError.style.display = 'block';
-        }
-        alert('Error al registrar login: ' + err);
-        return;
-      }
-      // Verificar que el usuario se guardó correctamente antes de continuar
-      let verificado;
-      try {
-        verificado = await cargarDatos('currentUser');
-        console.log('[LOGIN] Usuario recuperado tras guardar:', verificado);
-      } catch (err) {
-        console.error('[LOGIN] Error al recuperar usuario tras guardar:', err);
-        if (loginError) {
-          loginError.textContent = 'Error al recuperar usuario tras guardar: ' + err;
-          loginError.style.display = 'block';
-        }
-        alert('Error al recuperar usuario tras guardar: ' + err);
-        return;
-      }
-      if (verificado === userName) {
-        mostrarContenidoPrincipal();
-      } else {
-        if (loginError) {
-          loginError.textContent = 'Error: No se pudo guardar el usuario. Valor recuperado: ' + verificado;
-          loginError.style.display = 'block';
-        }
-        alert('Error: No se pudo guardar el usuario. Valor recuperado: ' + verificado);
-        mostrarPantallaLogin();
-      }
-    });
-    
-    // Mostrar contenido principal
-    async function mostrarContenidoPrincipal() {
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      document.getElementById('currentUser').textContent = currentUser;
-      // Inicializar la aplicación
-      renderFormDias();
-      await renderTabla();
-      await renderListaParejas();
-      await mostrarAuditoria();
-      await cargarNotas();
-      await mostrarNotasGuardadas();
-      // Asegurar que el formulario de registro esté visible y funcional
-      const registerForm = document.getElementById('registerForm');
-      if (registerForm) registerForm.style.display = 'block';
-      const diasTurnos = document.getElementById('diasTurnos');
-      if (diasTurnos && diasTurnos.children.length === 0) renderFormDias();
-    }
-    
-    // Mostrar pantalla de login
-    function mostrarPantallaLogin() {
-      document.getElementById('loginOverlay').style.display = 'flex';
-      document.getElementById('mainContent').style.display = 'none';
-      document.getElementById('userName').focus();
-    }
-    
-    // Cambiar usuario
-    async function cambiarUsuario() {
-      if (confirm('¿Estás seguro de que quieres cambiar de usuario? Se cerrará la sesión actual.')) {
-        await registrarCambio('Logout', `${currentUser} cerró sesión`);
-        await eliminarDatos('currentUser');
-        currentUser = null;
-        document.getElementById('userName').value = '';
-        mostrarPantallaLogin();
-      }
-    }
-    
-    // === SISTEMA DE AUDITORÍA ===
-    
-    // Registrar cambios
-    async function registrarCambio(accion, descripcion) {
-      const auditoria = await cargarAuditoria();
-      const cambio = {
-        timestamp: new Date().toISOString(),
-        usuario: currentUser,
-        accion: accion,
-        descripcion: descripcion
-      };
-      
-      auditoria.unshift(cambio); // Agregar al principio
-      
-      // Mantener solo los últimos 50 cambios
-      if (auditoria.length > 50) {
-        auditoria.splice(50);
-      }
-      
-      await guardarDatos('auditoria', auditoria);
-      mostrarAuditoria();
-    }
-    
-    // Cargar auditoría
-    async function cargarAuditoria() {
-      try {
-        return await cargarDatos('auditoria', []);
-      } catch {
-        return [];
-      }
-    }
-    
-    // Mostrar auditoría
-    async function mostrarAuditoria() {
-      const auditoria = await cargarAuditoria();
-      const container = document.getElementById('auditLog');
-      
-      if (auditoria.length === 0) {
-        container.innerHTML = '<p class="small">No hay cambios registrados aún.</p>';
-        return;
-      }
-      
-      let html = '';
-      auditoria.slice(0, 10).forEach(cambio => { // Mostrar solo los últimos 10
-        const fecha = new Date(cambio.timestamp);
-        const fechaFormateada = fecha.toLocaleString('es-ES');
-        
-        html += `<div class="audit-entry">
-          <strong>${cambio.accion}:</strong> ${cambio.descripcion}
-          <br><span class="audit-timestamp">👤 ${cambio.usuario} - ⏰ ${fechaFormateada}</span>
-        </div>`;
-      });
+  <!--
+    Legacy storage and sync code removed. All logic now uses Firebase modular SDK only.
+    All initialization, login, and data operations are handled in the <script type="module"> block at the end of the file.
+  -->
       
       if (auditoria.length > 10) {
         html += `<p class="small" style="text-align: center; margin-top: 10px;">
@@ -1035,7 +690,7 @@
           container.innerHTML = "<p style='color:#dc3545; font-weight:bold;'>No hay parejas registradas aún.</p>";
           return;
         }
-        let html = `<div class=\"table-container\"><table><thead><tr>
+        let html = `<div class="table-container"><table><thead><tr>
           <th>Pareja</th>
           <th>Turnos asignados</th>
           <th>Acciones</th>
@@ -1050,14 +705,14 @@
               turnosTexto.push(`${DIAS[dia]}: ${turnosDelDia.join(', ')}`);
             }
           }
-          html += `<tr>
-            <td><strong>${pareja.nombre1} & ${pareja.nombre2}</strong></td>
-            <td class=\"small\">${turnosTexto.join('<br>')}</td>
-            <td>
-              <button class=\"btn btn-success\" onclick=\"editarPareja(${index})\" style=\"font-size:0.8em; padding:4px 8px;\">Editar</button>
-              <button class=\"btn btn-danger\" onclick=\"eliminarPareja(${index})\" style=\"font-size:0.8em; padding:4px 8px;\">Eliminar</button>
-            </td>
-          </tr>`;
+          html += '<tr>' +
+            '<td><strong>' + pareja.nombre1 + ' & ' + pareja.nombre2 + '</strong></td>' +
+            '<td class="small">' + turnosTexto.join('<br>') + '</td>' +
+            '<td>' +
+              '<button class="btn btn-success" onclick="editarPareja(' + index + ')" style="font-size:0.8em; padding:4px 8px;">Editar</button>' +
+              '<button class="btn btn-danger" onclick="eliminarPareja(' + index + ')" style="font-size:0.8em; padding:4px 8px;">Eliminar</button>' +
+            '</td>' +
+          '</tr>';
         });
         html += "</tbody></table></div>";
         container.innerHTML = html;
@@ -1687,4 +1342,5 @@
   </script>
   </div> <!-- Fin del contenido principal -->
 </body>
+<!-- End of file -->
 </html>
