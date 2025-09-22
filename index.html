@@ -233,7 +233,10 @@
   <div id="mainContent" style="display: none;">
     <!-- Indicador de estado de conexión -->
     <div id="connectionStatus" style="background: #e3f2fd; padding: 8px; margin-bottom: 15px; border-radius: 5px; font-size: 0.9em; text-align: center;">
-      <span id="statusText">🔄 Conectando a la base de datos...</span>
+  <span id="statusText">🔄 Conectando a la base de datos...</span>
+  <br>
+  <button class="btn btn-secondary" id="btnRecargarDatos" style="margin-top:8px; font-size:0.9em;">🔄 Forzar recarga de datos</button>
+  <span id="ultimaActualizacion" class="small" style="display:block; margin-top:4px; color:#888;"></span>
     </div>
     
     <!-- Información del usuario actual -->
@@ -364,6 +367,31 @@
   </div>
 
   <script>
+    // Mostrar la hora de la última actualización
+    function mostrarUltimaActualizacion() {
+      const el = document.getElementById('ultimaActualizacion');
+      const ts = window.localStorage.getItem('ultimaActualizacionDatos');
+      if (el) {
+        if (ts) {
+          const fecha = new Date(parseInt(ts, 10));
+          el.textContent = 'Última actualización: ' + fecha.toLocaleString('es-ES');
+        } else {
+          el.textContent = '';
+        }
+      }
+    }
+
+    // Forzar recarga manual
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('btnRecargarDatos');
+      if (btn) {
+        btn.onclick = function() {
+          window.localStorage.removeItem('ultimaActualizacionDatos');
+          location.reload();
+        };
+      }
+      mostrarUltimaActualizacion();
+    });
     // === CONFIGURACIÓN DE ALMACENAMIENTO COMPARTIDO ===
     
     // Usando GitHub como base de datos (siempre funciona y es gratuito)
@@ -380,8 +408,8 @@
     
     // Usar un servicio JSON más simple y confiable
   // URL de tu endpoint npoint.io (reemplaza por tuya si quieres privacidad)
-  const NPOINT_URL = 'https://api.npoint.io/478db2a2edbdac28068a'; // SOLO LECTURA (GET)
-  const NPOINT_EDIT_URL = 'https://api.npoint.io/478db2a2edbdac28068a'; // LECTURA Y ESCRITURA (PUT)
+  const NPOINT_URL = 'https://api.npoint.io/e5dee7f5f2afe4344e47'; // SOLO LECTURA (GET)
+  const NPOINT_EDIT_URL = 'https://api.npoint.io/e5dee7f5f2afe4344e47'; // LECTURA Y ESCRITURA (PUT)
     
     // Configuración mejorada usando múltiples servicios de respaldo
     const BACKUP_APIS = [
@@ -516,6 +544,9 @@
         const resp = await fetch(NPOINT_URL + '?t=' + Date.now()); // evitar caché
         if (resp.ok) {
           const remoteData = await resp.json();
+          // Guardar timestamp de última actualización
+          window.localStorage.setItem('ultimaActualizacionDatos', Date.now().toString());
+          mostrarUltimaActualizacion();
           if (remoteData && remoteData[clave] !== undefined) {
             return remoteData[clave];
           }
@@ -1013,43 +1044,42 @@
 
     // Mostrar lista de parejas registradas
     async function renderListaParejas() {
-      const parejas = await cargarParejas();
-      const container = document.getElementById('listaParejasRegistradas');
-      
-      if (parejas.length === 0) {
-        container.innerHTML = "<p>No hay parejas registradas aún.</p>";
-        return;
-      }
-
-      let html = `<div class="table-container"><table><thead><tr>
-        <th>Pareja</th>
-        <th>Turnos asignados</th>
-        <th>Acciones</th>
-      </tr></thead><tbody>`;
-
-      parejas.forEach((pareja, index) => {
-        let turnosTexto = [];
-        for (let dia = 0; dia < DIAS.length; dia++) {
-          let turnosDelDia = pareja.turnosPorDia[dia].map(tId => 
-            TURNOS.find(t => t.id === tId)?.hora
-          ).filter(Boolean);
-          if (turnosDelDia.length > 0) {
-            turnosTexto.push(`${DIAS[dia]}: ${turnosDelDia.join(', ')}`);
-          }
+      try {
+        const parejas = await cargarParejas();
+        const container = document.getElementById('listaParejasRegistradas');
+        if (!parejas || parejas.length === 0) {
+          container.innerHTML = "<p style='color:#dc3545; font-weight:bold;'>No hay parejas registradas aún.</p>";
+          return;
         }
-
-        html += `<tr>
-          <td><strong>${pareja.nombre1} & ${pareja.nombre2}</strong></td>
-          <td class="small">${turnosTexto.join('<br>')}</td>
-          <td>
-            <button class="btn btn-success" onclick="editarPareja(${index})" style="font-size:0.8em; padding:4px 8px;">Editar</button>
-            <button class="btn btn-danger" onclick="eliminarPareja(${index})" style="font-size:0.8em; padding:4px 8px;">Eliminar</button>
-          </td>
-        </tr>`;
-      });
-
-      html += "</tbody></table></div>";
-      container.innerHTML = html;
+        let html = `<div class=\"table-container\"><table><thead><tr>
+          <th>Pareja</th>
+          <th>Turnos asignados</th>
+          <th>Acciones</th>
+        </tr></thead><tbody>`;
+        parejas.forEach((pareja, index) => {
+          let turnosTexto = [];
+          for (let dia = 0; dia < DIAS.length; dia++) {
+            let turnosDelDia = pareja.turnosPorDia[dia].map(tId => 
+              TURNOS.find(t => t.id === tId)?.hora
+            ).filter(Boolean);
+            if (turnosDelDia.length > 0) {
+              turnosTexto.push(`${DIAS[dia]}: ${turnosDelDia.join(', ')}`);
+            }
+          }
+          html += `<tr>
+            <td><strong>${pareja.nombre1} & ${pareja.nombre2}</strong></td>
+            <td class=\"small\">${turnosTexto.join('<br>')}</td>
+            <td>
+              <button class=\"btn btn-success\" onclick=\"editarPareja(${index})\" style=\"font-size:0.8em; padding:4px 8px;\">Editar</button>
+              <button class=\"btn btn-danger\" onclick=\"eliminarPareja(${index})\" style=\"font-size:0.8em; padding:4px 8px;\">Eliminar</button>
+            </td>
+          </tr>`;
+        });
+        html += "</tbody></table></div>";
+        container.innerHTML = html;
+      } catch (e) {
+        document.getElementById('listaParejasRegistradas').innerHTML = '<p style="color:#dc3545; font-weight:bold;">Error de red o datos. Intenta recargar la página.</p>';
+      }
     }
 
     // Función para editar pareja
@@ -1141,45 +1171,50 @@
 
     // Generar tabla de asignaciones con distribución automática
     async function renderTabla() {
-      const parejas = await cargarParejas();
-      let html = `<table><thead><tr>
-        <th>Día</th>
-        <th>Turno</th>
-        <th>Pareja</th>
-        <th>Tareas asignadas</th>
-      </tr></thead><tbody>`;
-      if (parejas.length === 0) {
+      try {
+        const parejas = await cargarParejas();
+        let html = `<table><thead><tr>
+          <th>Día</th>
+          <th>Turno</th>
+          <th>Pareja</th>
+          <th>Tareas asignadas</th>
+        </tr></thead><tbody>`;
+        if (!parejas || parejas.length === 0) {
+          for (let dia = 0; dia < DIAS.length; dia++) {
+            for (let t = 0; t < TURNOS.length; t++) {
+              html += `<tr>
+                <td>${DIAS[dia]}</td>
+                <td>${TURNOS[t].hora}</td>
+                <td colspan="2" style="color:#dc3545; font-weight:bold;">No hay parejas registradas</td>
+              </tr>`;
+            }
+          }
+          html += "</tbody></table>";
+          document.getElementById('tablaAsignaciones').innerHTML = html + '<div style="color:#dc3545; font-weight:bold; text-align:center; margin-top:10px;">Registra al menos una pareja para ver las asignaciones.</div>';
+          document.getElementById('estadisticasDistribucion').innerHTML = '';
+          return;
+        }
+        // Generar asignaciones automáticas
+        const asignaciones = generarAsignacionesAutomaticas(parejas);
         for (let dia = 0; dia < DIAS.length; dia++) {
           for (let t = 0; t < TURNOS.length; t++) {
+            const pareja = asignaciones[dia][t];
             html += `<tr>
               <td>${DIAS[dia]}</td>
               <td>${TURNOS[t].hora}</td>
-              <td colspan="2" style="color:#dc3545; font-weight:bold;">No hay parejas registradas</td>
+              <td>${pareja ? pareja.nombre1 + " & " + pareja.nombre2 : "-"}</td>
+              <td>${pareja ? TAREAS.join("<br>") : "-"}</td>
             </tr>`;
           }
         }
         html += "</tbody></table>";
-        document.getElementById('tablaAsignaciones').innerHTML = html + '<div style="color:#dc3545; font-weight:bold; text-align:center; margin-top:10px;">Registra al menos una pareja para ver las asignaciones.</div>';
+        document.getElementById('tablaAsignaciones').innerHTML = html;
+        // Mostrar estadísticas de distribución
+        mostrarEstadisticas(asignaciones, parejas);
+      } catch (e) {
+        document.getElementById('tablaAsignaciones').innerHTML = '<div style="color:#dc3545; font-weight:bold; text-align:center; margin-top:10px;">Error de red o datos. Intenta recargar la página.</div>';
         document.getElementById('estadisticasDistribucion').innerHTML = '';
-        return;
       }
-      // Generar asignaciones automáticas
-      const asignaciones = generarAsignacionesAutomaticas(parejas);
-      for (let dia = 0; dia < DIAS.length; dia++) {
-        for (let t = 0; t < TURNOS.length; t++) {
-          const pareja = asignaciones[dia][t];
-          html += `<tr>
-            <td>${DIAS[dia]}</td>
-            <td>${TURNOS[t].hora}</td>
-            <td>${pareja ? pareja.nombre1 + " & " + pareja.nombre2 : "-"}</td>
-            <td>${pareja ? TAREAS.join("<br>") : "-"}</td>
-          </tr>`;
-        }
-      }
-      html += "</tbody></table>";
-      document.getElementById('tablaAsignaciones').innerHTML = html;
-      // Mostrar estadísticas de distribución
-      mostrarEstadisticas(asignaciones, parejas);
     }
 
     // Mostrar estadísticas de distribución
