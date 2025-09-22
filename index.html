@@ -25,309 +25,118 @@
     .edit-form { background: #fff8e1; border-left: 4px solid #ffc107; }
     .text-success { color: #28a745; font-weight: bold; }
     .text-danger { color: #dc3545; font-weight: bold; }
-    
-    /* Estilos para el login */
-    .login-overlay { 
-      position: fixed; 
-      top: 0; left: 0; 
-      width: 100%; height: 100%; 
-      background: rgba(45, 113, 161, 0.95); 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      z-index: 1000;
-    }
-    .login-card { 
-      background: white; 
-      padding: 40px; 
-      border-radius: 10px; 
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
-      text-align: center; 
-      max-width: 400px; 
-      width: 90%;
-    }
-    .login-card h2 { 
-      color: #2d71a1; 
-      margin-bottom: 20px; 
-    }
-    .login-input { 
-      width: 100%; 
-      padding: 12px; 
-      border: 2px solid #ddd; 
-      border-radius: 5px; 
-      font-size: 16px; 
-      margin-bottom: 20px; 
-      box-sizing: border-box;
-    }
-    .login-input:focus { 
-      border-color: #2d71a1; 
-      outline: none; 
-    }
-    .user-info { 
-      background: #e8f4f8; 
-      padding: 10px; 
-      border-radius: 5px; 
-      margin-bottom: 20px; 
-      border-left: 4px solid #2d71a1;
-    }
-    .audit-section { 
-      background: #f9f9f9; 
-      padding: 15px; 
-      border-radius: 5px; 
-      margin-bottom: 20px; 
-      border: 1px solid #ddd;
-    }
-    .audit-entry { 
-      padding: 8px; 
-      border-bottom: 1px solid #eee; 
-      font-size: 0.9em;
-    }
-    .audit-entry:last-child { 
-      border-bottom: none; 
-    }
-    .audit-timestamp { 
-      color: #666; 
-      font-size: 0.8em; 
-    }
-    
-    /* === MEJORAS RESPONSIVE PARA MÓVILES === */
-    @media (max-width: 768px) {
-      /* Ajustes generales para móviles */
-      body { 
-        margin: 10px; 
-        font-size: 14px; 
-      }
-      
-      /* Botones más grandes y táctiles */
-      .btn { 
-        padding: 12px 20px; 
-        margin: 5px; 
-        font-size: 14px; 
-        min-height: 44px; /* Tamaño táctil recomendado */
-        width: 100%; 
-        max-width: 300px;
-      }
-      
-      /* Tablas responsivas */
-      table { 
-        font-size: 12px; 
-        overflow-x: auto; 
-        display: block; 
-        white-space: nowrap;
-      }
-      
-      /* Para tablas muy anchas, permitir scroll horizontal */
-      .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      th, td { 
-        padding: 8px 6px; 
-        min-width: 80px; 
-      }
-      
-      /* Formularios más amigables */
-      .form-section { 
-        padding: 15px; 
-        margin-bottom: 20px; 
-      }
-      
-      input[type="text"], select, textarea { 
-        width: 100%; 
-        padding: 12px; 
-        font-size: 16px; /* Evita zoom en iOS */
-        margin-bottom: 10px;
-        box-sizing: border-box;
-      }
-      
-      /* Login responsivo */
-      .login-card { 
-        padding: 25px; 
-        margin: 10px; 
-        width: calc(100% - 20px);
-      }
-      
-      /* Mejor espaciado en títulos */
-      h1 { 
-        font-size: 24px; 
-        margin-bottom: 15px; 
-      }
-      
-      h2 { 
-        font-size: 20px; 
-        margin-bottom: 12px; 
-      }
-      
-      h3 { 
-        font-size: 18px; 
-        margin-bottom: 10px; 
-      }
-      
-      /* Notas más grandes */
-      textarea { 
-        min-height: 120px; 
-        resize: vertical;
-      }
-      
-      /* Auditoría compacta */
-      .audit-section { 
-        padding: 10px; 
-        font-size: 13px; 
-      }
-      
-      .audit-entry { 
-        padding: 6px; 
-      }
-    }
-    
-    /* Para pantallas muy pequeñas */
-    @media (max-width: 480px) {
-      .btn { 
-        padding: 15px 10px; 
-        font-size: 16px; 
-      }
-      
-      table { 
-        font-size: 11px; 
-      }
-      
-      th, td { 
-        padding: 6px 4px; 
-        min-width: 60px; 
-      }
-      
-      .login-card { 
-        padding: 20px 15px; 
-      }
-    }
+    .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(45, 113, 161, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; max-width: 400px; width: 90%; }
+    .login-card h2 { color: #2d71a1; margin-bottom: 20px; }
+    .login-input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; }
+    .login-input:focus { border-color: #2d71a1; outline: none; }
+    .user-info { background: #e8f4f8; padding: 10px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #2d71a1; }
+    .audit-section { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ddd; }
+    .audit-entry { background: #fff; border-left: 4px solid #2196f3; padding: 8px; margin-bottom: 8px; border-radius: 3px; font-size: 0.97em; }
   </style>
-</head>
-<body>
-  <!-- Pantalla de login -->
-  <div id="loginOverlay" class="login-overlay">
-    <div class="login-card">
-      <h2>🔐 Acceso al Sistema</h2>
-      <p>Por favor, ingresa tu nombre para acceder al sistema de asignación de turnos.</p>
-      <form id="loginForm">
-        <input 
-          type="text" 
-          id="userName" 
-          class="login-input" 
-          placeholder="Ingresa tu nombre completo" 
-          required 
-          autocomplete="name"
-        >
-        <br>
-        <button class="btn" type="submit" style="padding: 12px 30px; font-size: 16px;">
-          ✅ Ingresar al sistema
-        </button>
-      </form>
-      <p class="small" style="margin-top: 15px; color: #666;">
-        Tu nombre será registrado para auditoría de cambios.
-      </p>
-    </div>
-  </div>
-
-  <!-- Contenido principal (oculto inicialmente) -->
-  <div id="mainContent" style="display: none;">
-    <!-- Indicador de estado de conexión -->
-    <div id="connectionStatus" style="background: #e3f2fd; padding: 8px; margin-bottom: 15px; border-radius: 5px; font-size: 0.9em; text-align: center;">
-  <span id="statusText">🔄 Conectando a la base de datos...</span>
-  <br>
-  <button class="btn btn-secondary" id="btnRecargarDatos" style="margin-top:8px; font-size:0.9em;">🔄 Forzar recarga de datos</button>
-  <span id="ultimaActualizacion" class="small" style="display:block; margin-top:4px; color:#888;"></span>
-    </div>
-    
-    <!-- Información del usuario actual -->
-    <div class="user-info">
-      <strong>👤 Usuario actual:</strong> <span id="currentUser"></span>
-      <button class="btn btn-secondary" onclick="cambiarUsuario()" style="float: right; font-size: 0.8em; padding: 4px 10px;">
-        🔄 Cambiar usuario
-      </button>
-      <div style="clear: both;"></div>
-    </div>
-
-  <h1>Asignación de Turnos y Tareas (Jueves a Jueves)</h1>
-  <div class="form-section">
-    <h2>Registrar pareja y turnos</h2>
-    <form id="registerForm">
-      <label>Pareja 1 (Nombre): <input required name="nombre1" /></label>
-      <label>Pareja 2 (Nombre): <input required name="nombre2" /></label>
-      <br><br>
-      <b>Elegir turno(s) para cada día:</b>
-      <table>
-        <thead>
-          <tr>
-            <th>Día</th>
-            <th>08:00-16:00</th>
-            <th>16:00-00:00</th>
-          </tr>
-        </thead>
-        <tbody id="diasTurnos">
-          <!-- se llena con JS -->
-        </tbody>
-      </table>
-      <span class="small">Puedes elegir uno o dos turnos por día.</span><br><br>
-      <button class="btn" type="submit">Registrar pareja y turnos</button>
-      <button class="btn btn-secondary" type="button" onclick="cargarDatosEjemplo()" style="margin-left: 10px;">📝 Cargar datos de ejemplo</button>
-
-    </form>
-  </div>
-
-  <h2>Parejas registradas</h2>
-  <div id="listaParejasRegistradas"></div>
-
-  <div id="editarParejaForm" style="display:none;" class="form-section edit-form">
-    <h3>Editar pareja</h3>
-    <form id="updateForm">
-      <input type="hidden" id="editIndex" />
-      <label>Pareja 1 (Nombre): <input required id="editNombre1" /></label>
-      <label>Pareja 2 (Nombre): <input required id="editNombre2" /></label>
-      <br><br>
-      <b>Elegir turno(s) para cada día:</b>
-      <table>
-        <thead>
-          <tr>
-            <th>Día</th>
-            <th>08:00-16:00</th>
-            <th>16:00-00:00</th>
-          </tr>
-        </thead>
-        <tbody id="editDiasTurnos">
-          <!-- se llena con JS -->
-        </tbody>
-      </table>
-      <span class="small">Puedes elegir uno o dos turnos por día.</span><br><br>
-      <button class="btn btn-success" type="submit">Actualizar pareja</button>
-      <button class="btn btn-secondary" type="button" onclick="cancelarEdicion()">Cancelar</button>
-    </form>
-  </div>
-
-  <h2>Tabla de asignaciones</h2>
-  <div class="form-section">
-    <p><strong>Sistema de distribución automática:</strong> Los turnos se asignan automáticamente rotando entre todas las parejas registradas, respetando los turnos que cada pareja seleccionó como disponibles.</p>
-    <button class="btn btn-success" onclick="redistribuirTurnos()">🔄 Redistribuir turnos automáticamente</button>
-    <button class="btn" onclick="generarPatronOrganizado()" style="background:#17a2b8; margin-left:10px;">📅 Patrón consecutivo</button>
-    <button class="btn btn-secondary" onclick="restaurarAlgoritmoOriginal()" style="margin-left:5px;">🔙 Algoritmo original</button>
-    <br><span class="small">Redistribuir: aleatorio | Consecutivo: 1 turno por pareja alternando | Original: distribución equitativa</span>
-  </div>
-  
-  <div id="estadisticasDistribucion"></div>
-  
-  <div id="tablaAsignaciones"></div>
-  <button class="btn" onclick="descargarCSV()">Descargar tabla (CSV)</button>
-  <button class="btn" onclick="window.print()">Imprimir tabla</button>
-  <br><span class="small">Cualquiera con este link puede ver y descargar la tabla.</span>
-
-  <!-- Sección de auditoría -->
-  <div class="audit-section">
-    <h3>📋 Registro de cambios</h3>
-    <div id="auditLog">
-      <p class="small">No hay cambios registrados aún.</p>
-    </div>
-    <button class="btn btn-secondary" onclick="limpiarAuditoria()" style="font-size: 0.8em; margin-top: 10px;">
-      � Limpiar registro (Admin)
+  <!-- Firebase App (core) SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <!-- Firebase Realtime Database SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script>
+    // --- Configuración de Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAt2Y7Jn7fDQBfxhAJ5Jco70fpvTYeyQVo",
+      authDomain: "turnosoficina-17fed.firebaseapp.com",
+      projectId: "turnosoficina-17fed",
+      storageBucket: "turnosoficina-17fed.firebasestorage.app",
+      messagingSenderId: "378553383601",
+      appId: "1:378553383601:web:242d049cd0399ad59d0090"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    var datos = {};
+    var ultimaActualizacion = null;
+    function guardarDatos(clave, valor) {
+      datos[clave] = valor;
+      ultimaActualizacion = Date.now();
+      db.ref('turnos').set({
+        datos: datos,
+        ultimaActualizacion: ultimaActualizacion
+      }).then(function() {
+        mostrarEstado('Datos guardados en la nube (Firebase)', 'ok');
+      }).catch(function(e) {
+        mostrarEstado('Error de red: no se pudo guardar en la nube (Firebase). Intenta de nuevo.', 'error');
+      });
+    }
+    function cargarDatos(clave, valorPorDefecto) {
+      return db.ref('turnos').once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+          var val = snapshot.val();
+          datos = val.datos || {};
+          ultimaActualizacion = val.ultimaActualizacion || null;
+          renderUltimaActualizacion();
+          mostrarEstado('Datos sincronizados desde la nube (Firebase)', 'ok');
+          if (clave) return datos[clave] !== undefined ? datos[clave] : valorPorDefecto;
+        } else {
+          datos = {};
+          ultimaActualizacion = null;
+          renderUltimaActualizacion();
+          mostrarEstado('No hay datos en la nube (Firebase)', 'warn');
+          if (clave) return valorPorDefecto;
+        }
+      }).catch(function(e) {
+        mostrarEstado('Error de red: no se pudo cargar desde la nube (Firebase).', 'error');
+        if (clave) return valorPorDefecto;
+      });
+    }
+    db.ref('turnos').on('value', function(snapshot) {
+      if (snapshot.exists()) {
+        var val = snapshot.val();
+        datos = val.datos || {};
+        ultimaActualizacion = val.ultimaActualizacion || null;
+        renderUltimaActualizacion();
+        mostrarEstado('Datos sincronizados en tiempo real (Firebase)', 'ok');
+        // Aquí puedes llamar a renderTabla, renderListaParejas, etc. si es necesario
+      }
+    });
+    function renderUltimaActualizacion() {
+      var el = document.getElementById('ultimaActualizacion');
+      if (el) {
+        if (ultimaActualizacion) {
+          var fecha = new Date(ultimaActualizacion);
+          el.textContent = 'Última actualización: ' + fecha.toLocaleString('es-ES');
+        } else {
+          el.textContent = '';
+        }
+      }
+    }
+    function mostrarEstado(msg, tipo) {
+      var statusElement = document.getElementById('statusText');
+      var containerElement = document.getElementById('connectionStatus');
+      if (!statusElement || !containerElement) return;
+      if (tipo === 'ok') {
+        statusElement.textContent = '✅ ' + msg;
+        containerElement.style.background = '#e8f5e8';
+        containerElement.style.color = '#2d5016';
+        containerElement.style.borderLeft = '4px solid #4caf50';
+      } else if (tipo === 'warn') {
+        statusElement.textContent = '⚠️ ' + msg;
+        containerElement.style.background = '#fff3cd';
+        containerElement.style.color = '#856404';
+        containerElement.style.borderLeft = '4px solid #ffc107';
+      } else {
+        statusElement.textContent = '❌ ' + msg;
+        containerElement.style.background = '#f8d7da';
+        containerElement.style.color = '#721c24';
+        containerElement.style.borderLeft = '4px solid #dc3545';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.getElementById('btnRecargarDatos');
+      if (btn) {
+        btn.onclick = function() {
+          cargarDatos();
+        };
+      }
+      renderUltimaActualizacion();
+    });
+  </script>
     </button>
   </div>
 
@@ -501,165 +310,9 @@
     const GIST_URL = 'https://api.github.com/gists/40c8f69e8e37c8b1a5c0a9e2b6f8d4c3';
     const GIST_RAW_URL = 'https://gist.githubusercontent.com/billybc/40c8f69e8e37c8b1a5c0a9e2b6f8d4c3/raw/oficina-data.json';
     
-    // Para pruebas, usar un servicio más simple
-    let datosCompartidos = {}; // Cache de datos compartidos
-
-    // Guardar datos en npoint.io (y localStorage como respaldo)
-    async function guardarDatos(clave, datos) {
-      try {
-        // Leer el objeto completo actual de npoint.io
-        let remoteData = {};
-        try {
-          const resp = await fetch(NPOINT_URL + '?t=' + Date.now()); // evitar caché
-          if (resp.ok) {
-            remoteData = await resp.json();
-          }
-        } catch (e) {}
-        // Actualizar la clave
-        remoteData[clave] = datos;
-        // Guardar en npoint.io
-        const putResp = await fetch(NPOINT_EDIT_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(remoteData)
-        });
-        if (putResp.ok) {
-          console.log(`☁️ ✅ Datos guardados en npoint.io: ${clave}`);
-          setTimeout(() => {
-            location.reload();
-          }, 500);
-          return true;
-        } else {
-          throw new Error('No se pudo guardar en npoint.io');
-        }
-      } catch (error) {
-        alert('Error de red: no se pudo guardar en la nube. Intenta de nuevo.');
-        return false;
-      }
-    }
-
-    // Cargar datos desde npoint.io (o localStorage si falla)
-    async function cargarDatos(clave, valorPorDefecto = null) {
-      try {
-        const resp = await fetch(NPOINT_URL + '?t=' + Date.now()); // evitar caché
-        if (resp.ok) {
-          const remoteData = await resp.json();
-          // Guardar timestamp de última actualización
-          window.localStorage.setItem('ultimaActualizacionDatos', Date.now().toString());
-          mostrarUltimaActualizacion();
-          if (remoteData && remoteData[clave] !== undefined) {
-            return remoteData[clave];
-          }
-        }
-      } catch (error) {
-        alert('Error de red: no se pudo cargar la información. Intenta de nuevo.');
-      }
-      return valorPorDefecto;
-    }
+    // Eliminadas funciones y variables de npoint.io. Toda la lógica de almacenamiento y sincronización ahora usa Firebase.
     
-    // Función para eliminar datos
-    async function eliminarDatos(clave) {
-      // Eliminar de localStorage
-      try {
-        localStorage.removeItem(clave);
-        localStorage.removeItem(`${clave}_timestamp`);
-        console.log(`🗑️ Eliminado de localStorage: ${clave}`);
-      } catch (error) {
-        console.warn(`⚠️ Error eliminando de localStorage: ${error.message}`);
-      }
-      
-      // Eliminar del cache compartido
-      if (isOnlineStorageAvailable) {
-        try {
-          delete datosCompartidos[clave];
-          delete datosCompartidos[`${clave}_timestamp`];
-          console.log(`☁️ Eliminado del cache compartido: ${clave}`);
-        } catch (error) {
-          console.warn(`⚠️ Error eliminando del cache: ${error.message}`);
-        }
-      }
-    }
-    
-    // Función para sincronizar datos entre "usuarios" (simulación realista)
-    function configurarSincronizacionPeriodica() {
-      setInterval(async () => {
-        if (isOnlineStorageAvailable) {
-          try {
-            // Simular que otro usuario agregó datos
-            await simularDatosDeOtroUsuario();
-            
-            // Verificar si hay cambios en el cache compartido
-            const parejasCompartidas = datosCompartidos['parejas'];
-            const parejasLocal = JSON.parse(localStorage.getItem('parejas') || '[]');
-            
-            if (parejasCompartidas && JSON.stringify(parejasCompartidas) !== JSON.stringify(parejasLocal)) {
-              console.log('🔄 ¡Nuevos datos de otros usuarios detectados!');
-              localStorage.setItem('parejas', JSON.stringify(parejasCompartidas));
-              if (typeof renderTabla === 'function') {
-                renderTabla();
-                mostrarNotificacion('🔄 Datos actualizados desde otros usuarios');
-              }
-            }
-            
-            // Lo mismo para auditoría
-            const auditoriaCompartida = datosCompartidos['auditoria'];
-            const auditoriaLocal = JSON.parse(localStorage.getItem('auditoria') || '[]');
-            
-            if (auditoriaCompartida && JSON.stringify(auditoriaCompartida) !== JSON.stringify(auditoriaLocal)) {
-              console.log('🔄 Nueva auditoría sincronizada');
-              localStorage.setItem('auditoria', JSON.stringify(auditoriaCompartida));
-              if (typeof mostrarAuditoria === 'function') {
-                mostrarAuditoria();
-              }
-            }
-            
-            // Y para notas
-            const notasCompartidas = datosCompartidos['notasGuardadas'];
-            const notasLocal = localStorage.getItem('notasGuardadas') || '';
-            
-            if (notasCompartidas && notasCompartidas !== notasLocal) {
-              console.log('🔄 Notas actualizadas desde otros usuarios');
-              localStorage.setItem('notasGuardadas', notasCompartidas);
-              if (typeof mostrarNotasGuardadas === 'function') {
-                mostrarNotasGuardadas();
-              }
-            }
-            
-          } catch (error) {
-            console.warn('⚠️ Error en sincronización:', error.message);
-          }
-        }
-      }, 15000); // Cada 15 segundos
-    }
-    
-    // Simular datos de otros usuarios para demostrar la sincronización
-    async function simularDatosDeOtroUsuario() {
-      // Solo simular ocasionalmente (10% de probabilidad)
-      if (Math.random() < 0.1) {
-        return;
-      }
-      
-      // Simular que otro usuario agregó una pareja nueva
-      if (Math.random() < 0.05) { // 5% de probabilidad
-        const parejasActuales = datosCompartidos['parejas'] || JSON.parse(localStorage.getItem('parejas') || '[]');
-        const nuevaPareja = {
-          nombre1: 'Usuario',
-          nombre2: 'Remoto',
-          turnosPorDia: [[1], [1], [2], [1], [2], [1], [1]] // Ejemplo de turnos
-        };
-        
-        // Solo agregar si no existe ya
-        const existe = parejasActuales.some(p => 
-          p.nombre1 === 'Usuario' && p.nombre2 === 'Remoto'
-        );
-        
-        if (!existe && parejasActuales.length < 15) {
-          parejasActuales.push(nuevaPareja);
-          datosCompartidos['parejas'] = parejasActuales;
-          console.log('👥 Simulado: Otro usuario agregó una pareja');
-        }
-      }
-    }
+    // Eliminada la lógica de sincronización local y simulación. Toda la sincronización es ahora en tiempo real vía Firebase.
     
     // Función para mostrar notificaciones al usuario
     function mostrarNotificacion(mensaje, tipo = 'info') {
