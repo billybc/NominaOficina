@@ -291,26 +291,18 @@
       var datos = {};
       var ultimaActualizacion = null;
       async function guardarDatos(clave, valor) {
-        // Leer los datos actuales de Firebase antes de guardar
-        let snapshot;
+        // Guardar solo la clave deseada de forma atómica sin sobrescribir todo el objeto
+        let updateObj = {};
+        updateObj['datos/' + clave] = valor;
+        updateObj['ultimaActualizacion'] = Date.now();
         try {
-          snapshot = await db.ref('turnos').once('value');
-        } catch (e) {
-          mostrarEstado('Error de red: no se pudo leer la nube (Firebase).', 'error');
-          return;
-        }
-        let datosActuales = (snapshot.exists() && snapshot.val().datos) ? snapshot.val().datos : {};
-        datosActuales[clave] = valor;
-        datos = datosActuales;
-        ultimaActualizacion = Date.now();
-        db.ref('turnos').set({
-          datos: datosActuales,
-          ultimaActualizacion: ultimaActualizacion
-        }).then(function() {
+          await db.ref('turnos').update(updateObj);
+          datos[clave] = valor;
+          ultimaActualizacion = updateObj['ultimaActualizacion'];
           mostrarEstado('Datos guardados en la nube (Firebase)', 'ok');
-        }).catch(function(e) {
+        } catch (e) {
           mostrarEstado('Error de red: no se pudo guardar en la nube (Firebase). Intenta de nuevo.', 'error');
-        });
+        }
       }
       function cargarDatos(clave, valorPorDefecto) {
         return db.ref('turnos').once('value').then(function(snapshot) {
