@@ -261,42 +261,53 @@
           <input id="userName" class="login-input" type="text" placeholder="Tu nombre" maxlength="32" autofocus required>
           <button class="btn btn-success" type="submit" style="width:100%; margin-top:10px;">Entrar</button>
         </form>
+        <div id="loginError" style="color:#dc3545; margin-top:10px; display:none;"></div>
       </div>
     </div>
-    <div id="notificaciones"></div
-      authDomain: "turnosoficina-17fed.firebaseapp.com",
-      projectId: "turnosoficina-17fed",
-      storageBucket: "turnosoficina-17fed.firebasestorage.app",
-      messagingSenderId: "378553383601",
-      appId: "1:378553383601:web:242d049cd0399ad59d0090"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    var datos = {};
-    var ultimaActualizacion = null;
-    function guardarDatos(clave, valor) {
-      datos[clave] = valor;
-      ultimaActualizacion = Date.now();
-      db.ref('turnos').set({
-        datos: datos,
-        ultimaActualizacion: ultimaActualizacion
-      }).then(function() {
-        mostrarEstado('Datos guardados en la nube (Firebase)', 'ok');
-      }).catch(function(e) {
-        mostrarEstado('Error de red: no se pudo guardar en la nube (Firebase). Intenta de nuevo.', 'error');
-      });
-    }
-    function cargarDatos(clave, valorPorDefecto) {
-      return db.ref('turnos').once('value').then(function(snapshot) {
-        if (snapshot.exists()) {
-          var val = snapshot.val();
-          datos = val.datos || {};
-          ultimaActualizacion = val.ultimaActualizacion || null;
-          renderUltimaActualizacion();
-          mostrarEstado('Datos sincronizados desde la nube (Firebase)', 'ok');
-          if (clave) return datos[clave] !== undefined ? datos[clave] : valorPorDefecto;
-        } else {
-          datos = {};
+    <div id="notificaciones"></div>
+    <!-- Cargar librerías de Firebase antes de inicializar -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+      // Configuración e inicialización de Firebase
+      var firebaseConfig = {
+        apiKey: "AIzaSyD-REEMPLAZA-ESTO",
+        authDomain: "turnosoficina-17fed.firebaseapp.com",
+        projectId: "turnosoficina-17fed",
+        storageBucket: "turnosoficina-17fed.appspot.com",
+        messagingSenderId: "378553383601",
+        appId: "1:378553383601:web:242d049cd0399ad59d0090",
+        databaseURL: "https://turnosoficina-17fed-default-rtdb.firebaseio.com/"
+      };
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const db = firebase.database();
+      var datos = {};
+      var ultimaActualizacion = null;
+      function guardarDatos(clave, valor) {
+        datos[clave] = valor;
+        ultimaActualizacion = Date.now();
+        db.ref('turnos').set({
+          datos: datos,
+          ultimaActualizacion: ultimaActualizacion
+        }).then(function() {
+          mostrarEstado('Datos guardados en la nube (Firebase)', 'ok');
+        }).catch(function(e) {
+          mostrarEstado('Error de red: no se pudo guardar en la nube (Firebase). Intenta de nuevo.', 'error');
+        });
+      }
+      function cargarDatos(clave, valorPorDefecto) {
+        return db.ref('turnos').once('value').then(function(snapshot) {
+          if (snapshot.exists()) {
+            var val = snapshot.val();
+            datos = val.datos || {};
+            ultimaActualizacion = val.ultimaActualizacion || null;
+            renderUltimaActualizacion();
+            mostrarEstado('Datos sincronizados desde la nube (Firebase)', 'ok');
+            if (clave) return datos[clave] !== undefined ? datos[clave] : valorPorDefecto;
+          } else {
+            datos = {};
           ultimaActualizacion = null;
           renderUltimaActualizacion();
           mostrarEstado('No hay datos en la nube (Firebase)', 'warn');
@@ -314,7 +325,10 @@
         ultimaActualizacion = val.ultimaActualizacion || null;
         renderUltimaActualizacion();
         mostrarEstado('Datos sincronizados en tiempo real (Firebase)', 'ok');
-        // Aquí puedes llamar a renderTabla, renderListaParejas, etc. si es necesario
+        renderTabla();
+        renderListaParejas();
+        mostrarAuditoria();
+        mostrarNotasGuardadas();
       }
     });
     function renderUltimaActualizacion() {
@@ -614,18 +628,21 @@
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const userName = document.getElementById('userName').value.trim();
-      
+      const loginError = document.getElementById('loginError');
       if (userName.length < 2) {
-        alert('Por favor, ingresa un nombre válido (mínimo 2 caracteres).');
+        if (loginError) {
+          loginError.textContent = 'Por favor, ingresa un nombre válido (mínimo 2 caracteres).';
+          loginError.style.display = 'block';
+        } else {
+          alert('Por favor, ingresa un nombre válido (mínimo 2 caracteres).');
+        }
         return;
       }
-      
+      if (loginError) loginError.style.display = 'none';
       currentUser = userName;
       await guardarDatos('currentUser', userName);
-      
       // Registrar el login
       await registrarCambio('Login', `${userName} ingresó al sistema`);
-      
       mostrarContenidoPrincipal();
     });
     
