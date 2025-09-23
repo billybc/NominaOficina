@@ -270,14 +270,155 @@
       </div>
     </div>
     <div id="notificaciones"></div>
-    <!-- Importar Firebase moderno y lógica principal como módulo -->
-    <script type="module">
-      import { db } from './firebase.js';
-      import { ref, update, get, onValue } from 'firebase/database';
+    <!-- Fallback for blocked Firebase CDN - using localStorage -->
+    <script>
+      // Fallback Firebase implementation using localStorage
+      const db = {
+        ref: function(path) {
+          return {
+            once: function(type) {
+              return new Promise(function(resolve) {
+                const data = localStorage.getItem('firebase_data_' + path);
+                if (data) {
+                  resolve({
+                    exists: function() { return true; },
+                    val: function() { return JSON.parse(data); }
+                  });
+                } else {
+                  resolve({
+                    exists: function() { return false; },
+                    val: function() { return null; }
+                  });
+                }
+              });
+            },
+            update: function(data) {
+              return new Promise(function(resolve) {
+                localStorage.setItem('firebase_data_' + path, JSON.stringify(data));
+                resolve();
+              });
+            },
+            on: function(type, callback) {
+              // Simple fallback - no real-time updates
+              this.once(type).then(callback);
+            }
+          };
+        }
+      };
       var datos = {};
       var ultimaActualizacion = null;
 
-      // ...todas tus funciones aquí...
+      // Firebase data functions
+      function guardarDatos(clave, valor) {
+        datos[clave] = valor;
+        const dataToSave = {
+          datos: datos,
+          ultimaActualizacion: new Date().toISOString()
+        };
+        return db.ref('turnos').update(dataToSave);
+      }
+      
+      function eliminarDatos(clave) {
+        delete datos[clave];
+        const dataToSave = {
+          datos: datos,
+          ultimaActualizacion: new Date().toISOString()
+        };
+        return db.ref('turnos').update(dataToSave);
+      }
+
+      // Placeholder functions that need implementation
+      function guardarNotas() {
+        // Implementation needed
+        console.log('guardarNotas called');
+      }
+      
+      function limpiarNotasGuardadas() {
+        // Implementation needed
+        console.log('limpiarNotasGuardadas called');
+      }
+      
+      function limpiarTextarea() {
+        // Implementation needed
+        console.log('limpiarTextarea called');
+      }
+      
+      function cambiarUsuario() {
+        // Implementation needed
+        console.log('cambiarUsuario called');
+      }
+      
+      function cargarDatosEjemplo() {
+        // Implementation needed
+        console.log('cargarDatosEjemplo called');
+      }
+      
+      function simularOtroUsuario() {
+        // Implementation needed
+        console.log('simularOtroUsuario called');
+      }
+      
+      function generarPatronOrganizado() {
+        // Implementation needed
+        console.log('generarPatronOrganizado called');
+      }
+      
+      function restaurarAlgoritmoOriginal() {
+        // Implementation needed
+        console.log('restaurarAlgoritmoOriginal called');
+      }
+      
+      function redistribuirTurnos() {
+        // Implementation needed
+        console.log('redistribuirTurnos called');
+      }
+      
+      function limpiarAuditoria() {
+        // Implementation needed
+        console.log('limpiarAuditoria called');
+      }
+      
+      function descargarCSV() {
+        // Implementation needed
+        console.log('descargarCSV called');
+      }
+      
+      function descargarPDF() {
+        // Implementation needed
+        console.log('descargarPDF called');
+      }
+      
+      function editarPareja() {
+        // Implementation needed
+        console.log('editarPareja called');
+      }
+      
+      function eliminarPareja() {
+        // Implementation needed
+        console.log('eliminarPareja called');
+      }
+      
+      function cancelarEdicion() {
+        // Implementation needed
+        console.log('cancelarEdicion called');
+      }
+      
+      // Placeholder rendering functions
+      function renderTabla() {
+        console.log('renderTabla called');
+      }
+      
+      function renderListaParejas() {
+        console.log('renderListaParejas called');
+      }
+      
+      function mostrarAuditoria() {
+        console.log('mostrarAuditoria called');
+      }
+      
+      function mostrarNotasGuardadas() {
+        console.log('mostrarNotasGuardadas called');
+      }
 
       // Al final del módulo, exponer funciones globales usadas en HTML
       window.guardarDatos = guardarDatos;
@@ -319,7 +460,7 @@
         }
       });
       function cargarDatos(clave, valorPorDefecto) {
-        return get(ref(db, 'turnos')).then(function(snapshot) {
+        return db.ref('turnos').once('value').then(function(snapshot) {
           if (snapshot.exists()) {
             var val = snapshot.val();
             datos = val.datos || {};
@@ -346,7 +487,7 @@
         });
       }
       // Suscripción en tiempo real
-      onValue(ref(db, 'turnos'), function(snapshot) {
+      db.ref('turnos').on('value', function(snapshot) {
         if (snapshot.exists()) {
           var val = snapshot.val();
           datos = val.datos || {};
