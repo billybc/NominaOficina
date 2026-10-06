@@ -2,13 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAt2Y7Jn7fDQBfxhAJ5Jco70fpvTYeyQVo",
-  authDomain: "turnosoficina-17fed.firebaseapp.com",
-  projectId: "turnosoficina-17fed",
-  storageBucket: "turnosoficina-17fed.appspot.com",
-  messagingSenderId: "378553383601",
-  appId: "1:378553383601:web:242d049cd0399ad59d0090",
-  databaseURL: "https://turnosoficina-17fed-default-rtdb.firebaseio.com/"
+  apiKey: "AIzaSyBLzrMr_kWLL_0t9Y-VBlORR29a0noCrk",
+  authDomain: "turnos-oficina.firebaseapp.com",
+  databaseURL: "https://turnos-oficina-default-rtdb.firebaseio.com", // Se genera al activar la Realtime Database
+  projectId: "turnos-oficina",
+  storageBucket: "turnos-oficina.firebasestorage.app",
+  messagingSenderId: "143636623453",
+  appId: "1:143636623453:web:1c325ace03ebeabed5db4"
 };
 
 const app = initializeApp(firebaseConfig);
