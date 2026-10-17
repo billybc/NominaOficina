@@ -194,6 +194,9 @@ $('authForm').addEventListener('submit', async (event) => {
   message('');
   const email = $('authEmail').value.trim().toLowerCase();
   const password = $('authPassword').value;
+  const submitButton = $('authSubmit');
+  submitButton.disabled = true;
+  submitButton.textContent = 'Ingresando...';
   try {
     if (authMode === 'register') {
       const result = await createUserWithEmailAndPassword(auth, email, password);
@@ -205,7 +208,18 @@ $('authForm').addEventListener('submit', async (event) => {
       await signInWithEmailAndPassword(auth, email, password);
     }
   } catch (error) {
-    message(error.code === 'auth/email-already-in-use' ? 'Ese correo ya está registrado.' : error.message, true);
+    const messages = {
+      'auth/invalid-credential': 'El correo o la contraseña no son correctos.',
+      'auth/invalid-login-credentials': 'El correo o la contraseña no son correctos.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'La contraseña no es correcta.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+      'auth/email-already-in-use': 'Ese correo ya está registrado.'
+    };
+    message(messages[error.code] || `No se pudo ingresar: ${error.message}`, true);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = authMode === 'register' ? 'Crear cuenta' : 'Ingresar';
   }
 });
 
@@ -318,7 +332,7 @@ onValue(ref(db, 'preferencias'), (snapshot) => {
 onAuthStateChanged(auth, async (user) => {
   state.user = user;
   const loggedIn = Boolean(user);
-  state.isAdmin = loggedIn && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  state.isAdmin = loggedIn && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   show($('authScreen'), !loggedIn);
   show($('app'), loggedIn);
   if (!loggedIn) return;
@@ -332,7 +346,7 @@ onAuthStateChanged(auth, async (user) => {
   } catch (error) {
     alert(`No se pudo registrar o cargar tu usuario: ${error.message}`);
   }
-  $('userInfo').textContent = `${user.email}`;
+  $('userInfo').textContent = `${user.email || ''}`;
   $('roleBadge').textContent = state.isAdmin ? 'Administrador' : 'Personal';
   show($('adminPanel'), state.isAdmin);
   show($('addMemberBtn'), state.isAdmin);
