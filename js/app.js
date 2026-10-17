@@ -1,7 +1,23 @@
 import {
   auth, db, ref, set, get, onValue, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged
-} from './firebase-config.js';
+} from './firebase-config.js?v=20261016-2228';
+
+window.addEventListener('error', (event) => {
+  const authMessage = document.getElementById('authMessage');
+  if (authMessage) {
+    authMessage.textContent = `Error de la aplicación: ${event.message || 'No se pudo cargar'}`;
+    authMessage.classList.add('error');
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const authMessage = document.getElementById('authMessage');
+  if (authMessage) {
+    authMessage.textContent = `Error de conexión: ${event.reason?.message || event.reason || 'No se pudo conectar'}`;
+    authMessage.classList.add('error');
+  }
+});
 
 // Cambia este correo por el correo real del administrador.
 const ADMIN_EMAIL = 'billycardona7@gmail.com';
