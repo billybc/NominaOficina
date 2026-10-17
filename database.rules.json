@@ -1,0 +1,28 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    "personas": {
+      ".write": "auth != null && (auth.token.email == 'billycardona7@gmail.com' || (!data.exists() && newData.child('uid').val() == auth.uid && newData.child('email').val() == auth.token.email))"
+    },
+    "horarios": {
+      ".write": "auth != null && auth.token.email == 'billycardona7@gmail.com'"
+    },
+    "configuracion": {
+      ".write": "auth != null && auth.token.email == 'billycardona7@gmail.com'"
+    },
+    "preferencias": {
+      "$uid": {
+        ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'billycardona7@gmail.com')"
+      }
+    },
+    "actividad": {
+      ".write": "auth != null && auth.token.email == 'billycardona7@gmail.com'",
+      "$id": {
+        ".write": "auth != null && (auth.token.email == 'billycardona7@gmail.com' || (!data.exists() && newData.child('uid').val() == auth.uid))"
+      }
+    },
+    "notas": {
+      ".write": "auth != null"
+    }
+  }
+}

@@ -3,71 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Turnos | Oficina</title>
+  <title>Control de Limpieza</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <main id="authScreen" class="auth-screen">
+    <section class="modal auth-card">
+      <div class="brand-mark">🧼</div>
+      <h1>Control de Limpieza</h1>
+      <p class="muted">Organiza los turnos de desayuno, almuerzo y cena.</p>
 
-  <!-- Modal Login -->
-  <div id="loginModal" class="overlay">
-    <div class="modal">
-      <h2 class="card-title">Iniciar Sesión</h2>
-      <form id="loginForm">
-        <input type="text" id="usernameInput" class="input-text" placeholder="Tu nombre de usuario" required style="margin-bottom: 16px;">
-        <button type="submit" class="btn" style="width: 100%;">Ingresar</button>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-mode="login">Ingresar</button>
+        <button class="auth-tab" data-auth-mode="register">Crear cuenta</button>
+        <button class="auth-tab" data-auth-mode="admin">Administrador</button>
+      </div>
+
+      <form id="authForm">
+        <label for="authName" id="authNameLabel">Nombre completo</label>
+        <input id="authName" class="input-text" type="text" autocomplete="name" required>
+        <label for="authEmail">Correo electrónico</label>
+        <input id="authEmail" class="input-text" type="email" autocomplete="email" required>
+        <label for="authPassword">Contraseña</label>
+        <input id="authPassword" class="input-text" type="password" minlength="6" autocomplete="current-password" required>
+        <button class="btn full-width" type="submit" id="authSubmit">Ingresar</button>
       </form>
-    </div>
-  </div>
+      <button id="forgotPasswordBtn" class="link-button" type="button">¿Olvidaste tu contraseña?</button>
+      <form id="forgotPasswordForm" class="hidden">
+        <label for="resetEmail">Correo de tu cuenta</label>
+        <input id="resetEmail" class="input-text" type="email" autocomplete="email" required>
+        <button class="btn full-width" type="submit">Enviar enlace de recuperación</button>
+        <button id="backToLoginBtn" class="btn btn-secondary full-width" type="button">Volver a ingresar</button>
+      </form>
+      <p id="authMessage" class="form-message" role="alert"></p>
+    </section>
+  </main>
 
-  <!-- Contenido Principal -->
-  <div id="app" style="display: none;">
+  <main id="app" class="app-shell hidden">
     <header>
       <div>
-        <h1>Gestión de Turnos</h1>
-        <span id="userInfo" style="font-size: 0.85rem; color: var(--text-muted);">Usuario: -</span>
+        <p class="eyebrow">Turnos compartidos</p>
+        <h1>Control de Limpieza</h1>
+        <span id="userInfo" class="muted"></span>
       </div>
-      <div id="statusBadge" class="status-badge connected">
-        <span class="status-dot"></span>
-        <span id="statusText">Sincronizado</span>
+      <div class="header-actions">
+        <span id="roleBadge" class="status-badge">Personal</span>
+        <button id="logoutBtn" class="btn btn-secondary">Cerrar sesión</button>
       </div>
     </header>
 
-    <div class="card">
-      <h2 class="card-title">Registrar Nueva Pareja</h2>
-      <form id="pairForm">
-        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-          <input type="text" id="nombre1" class="input-text" placeholder="Nombre Integrante 1" required>
-          <input type="text" id="nombre2" class="input-text" placeholder="Nombre Integrante 2" required>
-        </div>
-        <button type="submit" class="btn">➕ Guardar Pareja</button>
-      </form>
-    </div>
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">Organización diaria</p>
+        <h2 id="todayTitle">Turnos de limpieza</h2>
+        <p class="muted">La rotación asigna cada tarea a una pareja de personas registradas.</p>
+      </div>
+      <button id="refreshScheduleBtn" class="btn admin-only">🔄 Actualizar rotación</button>
+    </section>
 
-    <div class="card">
-      <h2 class="card-title">Parejas Registradas</h2>
+    <section class="stats-grid">
+      <article class="stat-card"><strong id="memberCount">0</strong><span>Personas registradas</span></article>
+      <article class="stat-card"><strong id="mealCount">0</strong><span>Comidas habilitadas</span></article>
+      <article class="stat-card"><strong id="todayCount">0</strong><span>Tareas para hoy</span></article>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div><p class="eyebrow">Agenda</p><h2>¿A quién le toca?</h2></div>
+        <span class="muted" id="scheduleDate"></span>
+      </div>
+      <div id="scheduleGrid" class="schedule-grid"></div>
+    </section>
+
+    <section id="mealPreferencesCard" class="card">
+      <div class="section-heading"><div><p class="eyebrow">Preferencias personales</p><h2>Comidas que no realizarás</h2></div></div>
+      <p class="muted">Marca únicamente las comidas en las que no participarás. Las demás se asignarán automáticamente en pareja.</p>
+      <form id="preferencesForm" class="preferences-grid"></form>
+      <button id="savePreferencesBtn" class="btn btn-secondary" type="button">Guardar mis preferencias</button>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <div><p class="eyebrow">Equipo</p><h2>Personas registradas</h2></div>
+        <button id="addMemberBtn" class="btn">➕ Agregar persona</button>
+      </div>
+      <form id="memberForm" class="inline-form hidden">
+        <input id="memberName" class="input-text" placeholder="Nombre completo" required>
+        <input id="memberEmail" class="input-text" type="email" placeholder="Correo electrónico" required>
+        <select id="memberShift" class="input-text">
+          <option value="08:00 - 16:00">Turno 08:00 - 16:00</option>
+          <option value="06:00 - 14:00">Turno 06:00 - 14:00</option>
+          <option value="24:00 - 08:00">Turno 24:00 - 08:00</option>
+        </select>
+        <button class="btn" type="submit">Guardar</button>
+        <button class="btn btn-secondary" type="button" id="cancelMemberBtn">Cancelar</button>
+      </form>
       <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Pareja</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="pairsTableBody">
-            <!-- Renderizado dinámico -->
-          </tbody>
+        <table><thead><tr><th>Nombre</th><th>Correo</th><th>Turno laboral</th><th>Acciones</th></tr></thead>
+          <tbody id="membersBody"></tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <h2 class="card-title">Notas y Observaciones Compartidas</h2>
-      <textarea id="notesArea" rows="4" placeholder="Escribe notas compartidas en tiempo real..." style="margin-bottom: 12px;"></textarea>
-      <button id="saveNotesBtn" class="btn btn-secondary">💾 Guardar Nota</button>
-    </div>
-  </div>
+    <section class="card">
+      <div class="section-heading"><div><p class="eyebrow">Anotaciones</p><h2>Notas del equipo</h2></div></div>
+      <textarea id="notesArea" rows="4" placeholder="Escribe avisos o notas para el equipo..."></textarea>
+      <button id="saveNotesBtn" class="btn btn-secondary">💾 Guardar nota</button>
+    </section>
+
+    <section id="adminPanel" class="card hidden">
+      <div class="section-heading"><div><p class="eyebrow">Solo administrador</p><h2>Comidas y mantenimiento</h2></div></div>
+      <form id="mealsForm" class="meal-settings"></form>
+      <button id="saveMealsBtn" class="btn" type="button">Guardar comidas y habilitación</button>
+      <div class="admin-actions">
+        <button id="clearActivityBtn" class="btn btn-danger">🗑️ Borrar actividad</button>
+        <button id="clearScheduleBtn" class="btn btn-danger">🧹 Reiniciar rotación</button>
+      </div>
+      <div class="table-container">
+        <table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th></tr></thead><tbody id="activityBody"></tbody></table>
+      </div>
+    </section>
+  </main>
 
   <script type="module" src="js/app.js"></script>
 </body>
