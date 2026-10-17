@@ -195,6 +195,16 @@ $('authForm').addEventListener('submit', async (event) => {
   const email = $('authEmail').value.trim().toLowerCase();
   const password = $('authPassword').value;
   const submitButton = $('authSubmit');
+  if (!email || !email.includes('@')) {
+    message('Escribe un correo electrónico válido.', true);
+    $('authEmail').focus();
+    return;
+  }
+  if (!password) {
+    message('Escribe tu contraseña.', true);
+    $('authPassword').focus();
+    return;
+  }
   submitButton.disabled = true;
   submitButton.textContent = 'Ingresando...';
   try {
