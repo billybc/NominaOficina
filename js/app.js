@@ -53,6 +53,7 @@ function setAuthMode(mode) {
   });
   const registering = mode === 'register';
   $('authName').required = registering;
+  $('authName').disabled = !registering;
   $('authName').classList.toggle('hidden', !registering);
   $('authNameLabel').classList.toggle('hidden', !registering);
   $('authSubmit').textContent = registering ? 'Crear cuenta' : 'Ingresar';
