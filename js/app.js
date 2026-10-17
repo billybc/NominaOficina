@@ -1,5 +1,5 @@
 import {
-  auth, db, ref, set, onValue, createUserWithEmailAndPassword,
+  auth, db, ref, set, get, onValue, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged
 } from './firebase-config.js';
 
@@ -32,6 +32,18 @@ const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, (character
 function message(text, error = false) {
   $('authMessage').textContent = text;
   $('authMessage').classList.toggle('error', error);
+}
+
+async function ensureMemberProfile(user) {
+  const profileRef = ref(db, `personas/${user.uid}`);
+  const snapshot = await get(profileRef);
+  if (snapshot.exists()) return;
+  await set(profileRef, {
+    uid: user.uid,
+    name: user.displayName || (user.email || '').split('@')[0] || 'Usuario',
+    email: user.email || '',
+    shift: '08:00 - 16:00'
+  });
 }
 
 function setAuthMode(mode) {
@@ -91,8 +103,8 @@ function renderPreferences() {
     const preference = state.preferences[meal] || {};
     const row = document.createElement('label');
     row.className = 'preference-row';
-    row.innerHTML = `<input type="checkbox" data-preference-meal="${meal}" ${preference.available === false ? 'checked' : ''}>
-      <span>No participaré en ${escapeText(state.meals[meal].name)}</span>`;
+    row.innerHTML = `<input type="checkbox" data-preference-meal="${meal}" ${preference.available !== false ? 'checked' : ''}>
+      <span>Quiero comida: ${escapeText(state.meals[meal].name)}</span>`;
     form.appendChild(row);
   });
 }
@@ -277,7 +289,7 @@ $('savePreferencesBtn').addEventListener('click', async () => {
   const preferences = {};
   meals.forEach((meal) => {
     const checkbox = $(`[data-preference-meal="${meal}"]`);
-    if (checkbox) preferences[meal] = { available: !checkbox.checked };
+    if (checkbox) preferences[meal] = { available: checkbox.checked };
   });
   try {
     await set(ref(db, `preferencias/${state.user.uid}`), preferences);
@@ -310,6 +322,9 @@ onAuthStateChanged(auth, (user) => {
   show($('authScreen'), !loggedIn);
   show($('app'), loggedIn);
   if (!loggedIn) return;
+  ensureMemberProfile(user).catch((error) => {
+  alert(`No se pudo registrar tu usuario automáticamente: ${error.message}`);
+  });
   $('userInfo').textContent = `${user.email}`;
   $('roleBadge').textContent = state.isAdmin ? 'Administrador' : 'Personal';
   show($('adminPanel'), state.isAdmin);

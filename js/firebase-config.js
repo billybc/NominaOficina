@@ -7,7 +7,7 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBLzrwMr_kWlL_0t9Y-VBlORR29aOnoCRk",
@@ -25,6 +25,7 @@ export const auth = getAuth(app);
 export {
   ref,
   set,
+  get,
   onValue,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
