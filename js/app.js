@@ -299,7 +299,6 @@ $('savePreferencesBtn').addEventListener('click', async () => {
   }
 });
 
-onValue(ref(db, 'personas'), (snapshot) => { state.members = snapshot.val() || {}; renderMembers(); });
 onValue(ref(db, 'horarios'), (snapshot) => { state.schedule = snapshot.val() || {}; renderSchedule(); });
 onValue(ref(db, 'actividad'), (snapshot) => { state.activity = snapshot.val() || {}; renderActivity(); });
 onValue(ref(db, 'notas'), (snapshot) => { $('notesArea').value = snapshot.val()?.contenido || ''; });
@@ -315,16 +314,23 @@ onValue(ref(db, 'preferencias'), (snapshot) => {
   renderPreferences();
 });
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   state.user = user;
   const loggedIn = Boolean(user);
   state.isAdmin = loggedIn && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   show($('authScreen'), !loggedIn);
   show($('app'), loggedIn);
   if (!loggedIn) return;
-  ensureMemberProfile(user).catch((error) => {
-  alert(`No se pudo registrar tu usuario automáticamente: ${error.message}`);
-  });
+  try {
+    await ensureMemberProfile(user);
+    onValue(ref(db, 'personas'), (snapshot) => {
+      state.members = snapshot.val() || {};
+      renderMembers();
+      renderPreferences();
+    });
+  } catch (error) {
+    alert(`No se pudo registrar o cargar tu usuario: ${error.message}`);
+  }
   $('userInfo').textContent = `${user.email}`;
   $('roleBadge').textContent = state.isAdmin ? 'Administrador' : 'Personal';
   show($('adminPanel'), state.isAdmin);
